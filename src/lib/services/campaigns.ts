@@ -144,10 +144,14 @@ export async function saveCampaignConfig(id: string, rawConfig: unknown) {
 
 /** Atualiza só uma seção do rascunho (quiz, perfis, regras, ...). */
 export async function saveCampaignSection<K extends keyof CampaignConfig>(id: string, key: K, value: unknown) {
+  return saveCampaignSections(id, { [key]: value });
+}
+
+/** Atualiza várias seções de forma atômica (ex.: perfis + regras, que dependem entre si). */
+export async function saveCampaignSections(id: string, patch: Partial<Record<keyof CampaignConfig, unknown>>) {
   const current = await getCampaign(id);
   if (!current) throw new Error("Campanha não encontrada.");
-  const next = { ...current.config, [key]: value };
-  return saveCampaignConfig(id, next);
+  return saveCampaignConfig(id, { ...current.config, ...patch });
 }
 
 export async function publishCampaign(id: string) {

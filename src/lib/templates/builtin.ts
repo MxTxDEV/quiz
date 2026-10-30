@@ -96,7 +96,7 @@ function profile(id: string, name: string, p: Partial<Profile>): Profile {
 
 let n = 0;
 const b = <T extends Block["type"]>(type: T, props: Omit<Extract<Block, { type: T }>, "id" | "type" | "profileIds"> & { profileIds?: string[] }) =>
-  ({ id: `b${++n}`, type, profileIds: [], ...props }) as Extract<Block, { type: T }>;
+  ({ id: `b${++n}`, type, profileIds: [], ...props }) as unknown as Extract<Block, { type: T }>;
 
 function salesBlocks(headline: string, sub: string, faq: [string, string][]): Block[] {
   return [
