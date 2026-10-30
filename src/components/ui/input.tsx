@@ -24,6 +24,10 @@ export function Label({ className, ...props }: React.ComponentProps<"label">) {
   return <label className={cn("text-[13px] font-medium text-foreground", className)} {...props} />;
 }
 
+/**
+ * Rótulo + controle + dica/erro. Sem `htmlFor`, o rótulo envolve o controle
+ * (associação implícita, acessível a leitores de tela).
+ */
 export function Field({
   label,
   hint,
@@ -39,11 +43,24 @@ export function Field({
   className?: string;
   htmlFor?: string;
 }) {
+  const message = error ? (
+    <span className="block text-xs text-danger">{error}</span>
+  ) : hint ? (
+    <span className="block text-xs text-muted-foreground">{hint}</span>
+  ) : null;
+  if (htmlFor || !label)
+    return (
+      <div className={cn("space-y-1.5", className)}>
+        {label && <Label htmlFor={htmlFor}>{label}</Label>}
+        {children}
+        {message}
+      </div>
+    );
   return (
-    <div className={cn("space-y-1.5", className)}>
-      {label && <Label htmlFor={htmlFor}>{label}</Label>}
+    <label className={cn("block space-y-1.5", className)}>
+      <span className="block text-[13px] font-medium text-foreground">{label}</span>
       {children}
-      {error ? <p className="text-xs text-danger">{error}</p> : hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
-    </div>
+      {message}
+    </label>
   );
 }

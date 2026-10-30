@@ -448,7 +448,7 @@ function LeadForm({
         <input type="checkbox" checked={f.consent} onChange={(e) => setF({ ...f, consent: e.target.checked })} className="mt-0.5 size-4 shrink-0" style={{ accentColor: "var(--q-accent)" }} />
         <span>
           {config.consentText}{" "}
-          <a href="/privacidade" target="_blank" className="underline">Política de Privacidade</a>
+          <a href="/privacidade" target="_blank" className="underline">Ver Política de Privacidade</a>
         </span>
       </label>
       {error && <p className="text-sm text-red-600">{error}</p>}

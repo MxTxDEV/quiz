@@ -32,9 +32,9 @@ export function TrendChart({ data }: { data: DailyPoint[] }) {
         <YAxis allowDecimals={false} tick={axis} tickLine={false} axisLine={false} />
         <Tooltip contentStyle={tooltipStyle} labelFormatter={(l) => fmtDay(String(l))} />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-        <Line type="monotone" dataKey="visitors" name="Visitantes" stroke={palette.visitors} strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="completed" name="Concluídos" stroke={palette.completed} strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="purchases" name="Vendas" stroke={palette.purchases} strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="visitors" name="Visitantes" stroke={palette.visitors} strokeWidth={2} dot={data.length <= 31 ? { r: 2 } : false} isAnimationActive={false} />
+        <Line type="monotone" dataKey="completed" name="Concluídos" stroke={palette.completed} strokeWidth={2} dot={data.length <= 31 ? { r: 2 } : false} isAnimationActive={false} />
+        <Line type="monotone" dataKey="purchases" name="Vendas" stroke={palette.purchases} strokeWidth={2} dot={data.length <= 31 ? { r: 2 } : false} isAnimationActive={false} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -49,9 +49,9 @@ export function CompareChart({ data }: { data: { name: string; visitors: number;
         <YAxis type="category" dataKey="name" width={140} tick={axis} tickLine={false} axisLine={false} />
         <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "#f6f6f7" }} />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="visitors" name="Visitantes" fill={palette.visitors} radius={[0, 3, 3, 0]} barSize={8} />
-        <Bar dataKey="completed" name="Concluídos" fill={palette.completed} radius={[0, 3, 3, 0]} barSize={8} />
-        <Bar dataKey="purchases" name="Vendas" fill={palette.purchases} radius={[0, 3, 3, 0]} barSize={8} />
+        <Bar dataKey="visitors" name="Visitantes" fill={palette.visitors} radius={[0, 3, 3, 0]} barSize={8} isAnimationActive={false} />
+        <Bar dataKey="completed" name="Concluídos" fill={palette.completed} radius={[0, 3, 3, 0]} barSize={8} isAnimationActive={false} />
+        <Bar dataKey="purchases" name="Vendas" fill={palette.purchases} radius={[0, 3, 3, 0]} barSize={8} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>
   );

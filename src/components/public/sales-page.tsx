@@ -1,3 +1,4 @@
+import type React from "react";
 import { Check, Gift, ShieldCheck } from "lucide-react";
 import type { Block, Offer, SalesPage } from "@/lib/domain/config";
 import { themeVars } from "./theme";
@@ -79,7 +80,8 @@ function PriceBox({ offer, title }: { offer: Offer; title: string }) {
   );
 }
 
-function BlockView({ block: b, offer, ctx }: { block: Block; offer: Offer; ctx: SalesContext }) {
+/** Retorna null quando o bloco não tem conteúdo (a seção inteira é omitida). */
+function renderBlock(b: Block, offer: Offer, ctx: SalesContext): React.ReactNode {
   switch (b.type) {
     case "headline":
       return <h1 className={`text-[2em] sm:text-[2.4em] font-extrabold leading-[1.1] tracking-tight ${b.align === "center" ? "text-center" : ""}`}>{fill(b.text, ctx)}</h1>;
@@ -234,11 +236,14 @@ export function SalesPageView({ page, offer, ctx, minHeight = "100dvh" }: { page
   return (
     <div style={{ ...themeVars(page.theme), minHeight }}>
       <div className="mx-auto max-w-2xl">
-        {blocks.map((b) => (
-          <section key={b.id} className={section} style={sectionStyle} data-block={b.type}>
-            <BlockView block={b} offer={offer} ctx={ctx} />
-          </section>
-        ))}
+        {blocks.map((b) => {
+          const node = renderBlock(b, offer, ctx);
+          return node ? (
+            <section key={b.id} className={section} style={sectionStyle} data-block={b.type}>
+              {node}
+            </section>
+          ) : null;
+        })}
         {blocks.length === 0 && <p className="p-10 text-center" style={{ color: "var(--q-muted)" }}>Página sem blocos.</p>}
       </div>
     </div>

@@ -248,7 +248,7 @@ export const leadCaptureSchema = z.object({
   consentText: z
     .string()
     .max(1000)
-    .default("Concordo em receber comunicações sobre este conteúdo e com a Política de Privacidade."),
+    .default("Concordo em receber comunicações sobre este conteúdo e autorizo o uso do meu nome e e-mail para esse fim."),
 });
 export type LeadCapture = z.infer<typeof leadCaptureSchema>;
 

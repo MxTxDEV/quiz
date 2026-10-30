@@ -398,8 +398,8 @@ function OfferEditor({ offer, onChange, product }: { offer: Offer; onChange: (o:
         <CardHeader><CardTitle>Conteúdo da oferta</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <Field label="Descrição"><Textarea value={offer.description} onChange={(e) => set({ description: e.target.value })} /></Field>
-          <Field label="Benefícios"><StringListEditor value={offer.benefits} onChange={(v) => set({ benefits: v })} /></Field>
-          <Field label="Bônus">
+          <div className="space-y-1.5"><p className="text-[13px] font-medium">Benefícios</p><StringListEditor value={offer.benefits} onChange={(v) => set({ benefits: v })} /></div>
+          <div className="space-y-1.5"><p className="text-[13px] font-medium">Bônus</p>
             <ObjectListEditor
               value={offer.bonuses}
               onChange={(v) => set({ bonuses: v })}
@@ -407,7 +407,7 @@ function OfferEditor({ offer, onChange, product }: { offer: Offer; onChange: (o:
               fields={[{ key: "title", label: "Título" }, { key: "description", label: "Descrição", multiline: true }]}
               addLabel="Adicionar bônus"
             />
-          </Field>
+          </div>
           <Field label="Garantia" hint="Conforme a política real do produto."><Textarea value={offer.guarantee} onChange={(e) => set({ guarantee: e.target.value })} /></Field>
         </CardContent>
       </Card>

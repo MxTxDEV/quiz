@@ -82,10 +82,10 @@ export default async function CampaignAnalyticsPage({
       </div>
 
       <Card className="overflow-hidden">
-        <CardHeader><div><CardTitle>Abandono por pergunta</CardTitle><CardDescription>Quem chegou à pergunta e não respondeu</CardDescription></div></CardHeader>
+        <CardHeader><div><CardTitle>Abandono por pergunta</CardTitle><CardDescription>Quem chegou à pergunta e não avançou (pular uma pergunta opcional conta como avançar)</CardDescription></div></CardHeader>
         {dropoff.length ? (
           <Table>
-            <thead><tr><Th className="w-10">#</Th><Th>Pergunta</Th><Th className="text-right">Chegaram</Th><Th className="text-right">Responderam</Th><Th className="text-right">Abandono</Th></tr></thead>
+            <thead><tr><Th className="w-10">#</Th><Th>Pergunta</Th><Th className="text-right">Chegaram</Th><Th className="text-right">Avançaram</Th><Th className="text-right">Abandono</Th></tr></thead>
             <tbody>
               {dropoff.map((d, i) => (
                 <tr key={d.questionId}>
