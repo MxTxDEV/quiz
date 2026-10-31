@@ -1,0 +1,54 @@
+{
+ "duration": 40.744,
+ "scenes": [
+  {
+   "id": "hook",
+   "fala": "Você não precisa de mais dinheiro para começar uma renda extra.",
+   "legenda": "Você não precisa de mais dinheiro para começar uma renda extra.",
+   "start": 0.35,
+   "end": 4.398
+  },
+  {
+   "id": "rota",
+   "fala": "Precisa descobrir os caminhos que ainda não enxergou.",
+   "legenda": "Precisa descobrir os caminhos que ainda não enxergou.",
+   "start": 4.698,
+   "end": 8.33
+  },
+  {
+   "id": "objecao",
+   "fala": "Pouco tempo? Pouco dinheiro? Nenhuma experiência?",
+   "legenda": "Pouco tempo? Pouco dinheiro? Nenhuma experiência?",
+   "start": 8.63,
+   "end": 12.594
+  },
+  {
+   "id": "virada",
+   "fala": "Ainda assim, existem caminhos para você.",
+   "legenda": "Ainda assim, existem caminhos para você.",
+   "start": 12.894,
+   "end": 16.078
+  },
+  {
+   "id": "quiz",
+   "fala": "Responda sete perguntas rápidas e descubra qual renda extra combina com a sua rotina.",
+   "legenda": "Responda 7 perguntas rápidas e descubra qual renda extra combina com a sua rotina.",
+   "start": 16.378,
+   "end": 25.066
+  },
+  {
+   "id": "produto",
+   "fala": "Você recebe um resultado personalizado e um guia prático, com trinta ideias, ferramentas gratuitas e um plano de trinta dias.",
+   "legenda": "Resultado personalizado + guia prático com 30 ideias, ferramentas gratuitas e plano de 30 dias.",
+   "start": 25.366,
+   "end": 34.486
+  },
+  {
+   "id": "cta",
+   "fala": "Faça o teste gratuito. O link está aqui embaixo.",
+   "legenda": "Faça o quiz gratuito. O link está aqui embaixo.",
+   "start": 34.786,
+   "end": 39.544
+  }
+ ]
+}
