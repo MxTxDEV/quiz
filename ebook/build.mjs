@@ -19,6 +19,7 @@ const require = createRequire(import.meta.url);
 /** Pasta pública com caminho não adivinhável (o link é entregue só a quem comprou). */
 const ACCESS_DIR = "acesso/rota-invisivel-k7q2m9xv4t";
 const outDir = path.join(root, "..", "public", ACCESS_DIR);
+const BASE = `/${ACCESS_DIR}/`; // links absolutos: funcionam com ou sem barra final
 
 const BOOKS = [
   {
@@ -155,7 +156,7 @@ function buildBook(book) {
   const html = (web) => `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex,nofollow"/>
 <title>${esc(book.title)} · Rota Invisível</title><style>${css}</style></head><body>
-${web ? `<div class="topbar"><a class="brand" href="./">← Rota <span>Invisível</span></a><a class="btn" href="./${book.pdf}" download>Baixar PDF</a></div>` : ""}
+${web ? `<div class="topbar"><a class="brand" href="${BASE}">← Rota <span>Invisível</span></a><a class="btn" href="${BASE}${book.pdf}" download>Baixar PDF</a></div>` : ""}
 <main class="doc">${cover}${toc}${introHtml}${chaptersHtml}</main></body></html>`;
   return { web: html(true), print: html(false) };
 }
@@ -168,7 +169,7 @@ function indexPage() {
       <div class="mini">${routeSvg(1)}<span class="mini-label">${esc(b.label)}</span><span class="mini-title">${esc(b.title)}</span></div>
       <div class="info">
         <p class="lbl">${esc(b.label)}</p><h2>${esc(b.title)}</h2><p class="sub">${esc(b.subtitle)}</p>
-        <div class="actions"><a class="primary" href="./${b.slug}.html">Ler online</a><a class="ghost" href="./${b.pdf}" download>Baixar PDF</a></div>
+        <div class="actions"><a class="primary" href="${BASE}${b.slug}.html">Ler online</a><a class="ghost" href="${BASE}${b.pdf}" download>Baixar PDF</a></div>
       </div>
     </article>`;
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
