@@ -133,7 +133,8 @@ assert(true, "lead capturado");
 console.log("10. Oferta e clique no checkout");
 await v.getByRole("link", { name: "Conheça o guia para começar" }).click();
 await v.waitForURL(/\/oferta\?s=/);
-await v.waitForTimeout(500);
+await v.locator("[data-offer]").first().scrollIntoViewIfNeeded();
+await v.waitForTimeout(800);
 await shot(v, "10-oferta");
 const sessionId = new URL(v.url()).searchParams.get("s");
 // o redirect para o domínio externo é verificado via HTTP (o Chromium não intercepta redirects de navegação)
@@ -165,7 +166,7 @@ console.log("12. Métricas no dashboard e na analytics da campanha");
 const events = await sql`select type, count(*)::int as n from events where campaign_id = ${campaignId} group by type`;
 const by = Object.fromEntries(events.map((e) => [e.type, e.n]));
 assert(by.page_view === 1 && by.quiz_started === 1 && by.quiz_completed === 1, "eventos de visita, início e conclusão");
-assert(by.result_viewed === 1 && by.offer_viewed === 1 && by.checkout_clicked === 1 && by.lead_captured === 1 && by.purchase_confirmed === 1, "eventos de resultado, oferta, checkout, lead e compra");
+assert(by.result_viewed === 1 && by.offer_viewed === 1 && by.checkout_redirect === 1 && by.sales_page_view === 1 && by.lead_captured === 1 && by.purchase_confirmed === 1, "eventos de resultado, oferta, checkout, lead e compra");
 const [s] = await sql`select device, utm_source, traffic_source, profile_id from visitor_sessions where id = ${sessionId}`;
 assert(s.device === "mobile" && s.utm_source === "facebook" && s.profile_id === "vendedor", "sessão com dispositivo, UTM e perfil");
 await admin.goto(`${BASE}/campaigns/${campaignId}/analytics`);
@@ -177,7 +178,7 @@ await shot(admin, "12-dashboard");
 console.log("13. Preview do rascunho");
 const prev = await adminCtx.newPage();
 await prev.goto(`${BASE}/preview/${campaignId}`);
-assert(await prev.getByText("Pré-visualização do rascunho").isVisible(), "preview acessível");
+assert(await prev.getByText("nada é registrado").isVisible(), "preview acessível");
 await prev.close();
 
 assert(errors.length === 0, `sem erros de JavaScript no navegador ${errors.length ? JSON.stringify(errors) : ""}`);

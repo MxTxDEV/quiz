@@ -31,25 +31,29 @@ function useAct() {
   return { pending, exec };
 }
 
-export function PrivacyCard({ value, canEdit }: { value: { controllerName: string; contactEmail: string; policyText: string }; canEdit: boolean }) {
+export function PrivacyCard({ value, canEdit }: { value: { controllerName: string; contactEmail: string; document: string; policyText: string; termsText: string }; canEdit: boolean }) {
   const [f, setF] = useState(value);
   const a = useAct();
   return (
     <Card>
       <CardHeader>
         <div>
-          <CardTitle>Política de Privacidade</CardTitle>
-          <CardDescription>Publicada em /privacidade e vinculada em todos os formulários de lead e rodapés.</CardDescription>
+          <CardTitle>Responsável, privacidade e termos</CardTitle>
+          <CardDescription>Exibidos no rodapé das páginas de vendas, em /privacidade e em /termos.</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
         <fieldset disabled={!canEdit} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Controlador dos dados (nome ou empresa)"><Input value={f.controllerName} onChange={(e) => setF({ ...f, controllerName: e.target.value })} /></Field>
-            <Field label="E-mail para solicitações LGPD"><Input type="email" value={f.contactEmail} onChange={(e) => setF({ ...f, contactEmail: e.target.value })} /></Field>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Responsável pelo produto / controlador dos dados"><Input value={f.controllerName} onChange={(e) => setF({ ...f, controllerName: e.target.value })} /></Field>
+            <Field label="CPF ou CNPJ (opcional)"><Input value={f.document} onChange={(e) => setF({ ...f, document: e.target.value })} /></Field>
+            <Field label="E-mail de contato e LGPD"><Input type="email" value={f.contactEmail} onChange={(e) => setF({ ...f, contactEmail: e.target.value })} /></Field>
           </div>
           <Field label="Texto da política" hint="Vazio = texto padrão resumido. Recomendado revisar com assessoria jurídica.">
             <Textarea rows={8} value={f.policyText} onChange={(e) => setF({ ...f, policyText: e.target.value })} />
+          </Field>
+          <Field label="Termos de Uso" hint="Vazio = o link “Termos de Uso” não aparece no rodapé.">
+            <Textarea rows={6} value={f.termsText} onChange={(e) => setF({ ...f, termsText: e.target.value })} />
           </Field>
           {canEdit && <div className="flex justify-end"><Button size="sm" loading={a.pending} onClick={() => a.exec(() => savePrivacyAction(f), "Política salva")}>Salvar</Button></div>}
         </fieldset>

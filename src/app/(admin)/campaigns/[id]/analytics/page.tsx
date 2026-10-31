@@ -68,8 +68,10 @@ export default async function CampaignAnalyticsPage({
                 { label: "Iniciaram o quiz", value: counts.started },
                 { label: "Concluíram", value: counts.completed },
                 { label: "Viram o resultado", value: counts.resultViews },
+                { label: "Página de vendas", value: counts.salesPageViews },
                 { label: "Viram a oferta", value: counts.offerViews },
-                { label: "Clicaram no checkout", value: counts.checkoutClicks },
+                { label: "Clicaram em comprar", value: counts.purchaseClicks },
+                { label: "Foram ao checkout", value: counts.checkoutClicks },
                 { label: "Compraram", value: counts.purchases },
               ]}
             />

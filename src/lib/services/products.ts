@@ -21,7 +21,10 @@ export const productInputSchema = z
     checkoutUrl: url.default(""),
     benefits: z.array(z.string().trim().min(1).max(300)).max(30).default([]),
     deliverables: z.array(z.string().trim().min(1).max(300)).max(30).default([]),
-    bonuses: z.array(z.object({ title: z.string().trim().min(1).max(300), description: z.string().trim().max(1000).default("") })).max(20).default([]),
+    bonuses: z
+      .array(z.object({ title: z.string().trim().min(1).max(300), description: z.string().trim().max(1000).default(""), imageUrl: url.default("") }))
+      .max(20)
+      .default([]),
     guarantee: z.string().trim().max(1000).default(""),
     status: z.enum(["active", "inactive"]).default("active"),
   })

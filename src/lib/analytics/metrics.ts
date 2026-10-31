@@ -8,8 +8,10 @@ export type FunnelCounts = {
   completed: number;
   leads: number;
   resultViews: number;
+  salesPageViews: number;
   offerViews: number;
-  checkoutClicks: number;
+  purchaseClicks: number; // cliques em botões de compra (intenção)
+  checkoutClicks: number; // redirecionamentos efetivos ao checkout
   purchases: number; // somente confirmadas
   revenueCents: number; // somente confirmadas
   adSpendCents: number;

@@ -1,6 +1,7 @@
 import { uid } from "@/lib/utils";
 import {
   emptyConfig,
+  blockSchema,
   type Block,
   type BlockType,
   type CampaignConfig,
@@ -80,54 +81,41 @@ export function newProfile(name = "Novo perfil", isDefault = false): Profile {
 }
 
 export const blockLabels: Record<BlockType, string> = {
+  hero: "Hero (primeira dobra)",
+  personalized: "Resultado personalizado do quiz",
+  text: "Seção de texto",
   headline: "Headline",
   subheadline: "Subheadline",
   image: "Imagem",
   video: "Vídeo",
   mockup: "Mockup do produto",
   benefits: "Lista de benefícios",
-  content: "Apresentação do conteúdo",
+  content: "Apresentação do conteúdo / capítulos",
   bonuses: "Bônus",
   testimonials: "Depoimentos",
   faq: "Perguntas frequentes",
+  offerCard: "Card da oferta",
   price: "Preço",
   cta: "Botão de compra",
   guarantee: "Garantia",
+  ctaSection: "CTA final",
   footer: "Rodapé",
 };
 
+const starters: { [K in BlockType]?: Record<string, unknown> } = {
+  hero: { badge: "Produto digital", headline: "Sua headline principal", subheadline: "Explique em uma frase o que a pessoa recebe.", ctaLabel: "", ctaAction: "offer" },
+  personalized: { title: "Seu próximo passo começa pelo que você respondeu." },
+  text: { title: "Título da seção", body: "Texto da seção." },
+  headline: { text: "Sua headline aqui" },
+  subheadline: { text: "Explique em uma frase o que a pessoa recebe." },
+  offerCard: { title: "Seu acesso" },
+  ctaSection: { headline: "Chamada final", subheadline: "", ctaAction: "checkout" },
+  testimonials: { title: "Depoimentos" },
+};
+
+/** Novo bloco com os padrões do schema (fonte única de verdade). */
 export function newBlock(type: BlockType): Block {
-  const base = { id: uid("b"), profileIds: [] as string[] };
-  switch (type) {
-    case "headline":
-      return { ...base, type, text: "Sua headline aqui", align: "center" };
-    case "subheadline":
-      return { ...base, type, text: "Explique em uma frase o que a pessoa recebe.", align: "center" };
-    case "image":
-      return { ...base, type, url: "", alt: "" };
-    case "video":
-      return { ...base, type, url: "" };
-    case "mockup":
-      return { ...base, type, url: "", caption: "" };
-    case "benefits":
-      return { ...base, type, title: "O que você vai conseguir", useOffer: true, items: [] };
-    case "content":
-      return { ...base, type, title: "O que está incluído", items: [] };
-    case "bonuses":
-      return { ...base, type, title: "Bônus incluídos", useOffer: true };
-    case "testimonials":
-      return { ...base, type, title: "Depoimentos", items: [] };
-    case "faq":
-      return { ...base, type, title: "Perguntas frequentes", items: [] };
-    case "price":
-      return { ...base, type, title: "" };
-    case "cta":
-      return { ...base, type, label: "", note: "" };
-    case "guarantee":
-      return { ...base, type, title: "Garantia", text: "" };
-    case "footer":
-      return { ...base, type, text: "" };
-  }
+  return blockSchema.parse({ id: uid("b"), type, ...(starters[type] ?? {}) });
 }
 
 export function offerFromProduct(product: Product | null | undefined, current?: Offer): Offer {
@@ -140,9 +128,11 @@ export function offerFromProduct(product: Product | null | undefined, current?: 
     referencePriceNote: product.referencePriceNote,
     description: product.description,
     benefits: product.benefits,
-    bonuses: product.bonuses,
     checkoutUrl: product.checkoutUrl,
     guarantee: product.guarantee,
+    productName: product.name,
+    coverImageUrl: product.coverImageUrl,
+    bonuses: product.bonuses.map((b) => ({ title: b.title, description: b.description, imageUrl: b.imageUrl ?? "" })),
   };
 }
 

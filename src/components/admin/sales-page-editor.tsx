@@ -16,7 +16,8 @@ import { ThemeEditor } from "@/components/admin/theme-editor";
 import { SaveBar, useSections } from "@/components/admin/use-section";
 import { SalesPageView } from "@/components/public/sales-page";
 import { blockLabels, newBlock, offerFromProduct } from "@/lib/domain/defaults";
-import type { Block, BlockType, CampaignConfig, Offer, Profile } from "@/lib/domain/config";
+import type { Block, BlockType, CampaignConfig, Offer, Profile, Quiz } from "@/lib/domain/config";
+import { GroupEditor, knownAttributes, newCondition } from "@/components/admin/results-editor";
 import type { Product } from "@/lib/db/schema";
 import { centsToInput, cn, parseMoneyToCents, uid } from "@/lib/utils";
 
@@ -82,6 +83,7 @@ export function SalesPageEditor({
                     >
                       {handle}
                       <span className="flex-1 truncate">{blockLabels[b.type]}</span>
+                      {b.group && <Badge>{b.group}</Badge>}
                       {b.profileIds.length > 0 && <Badge tone="accent">{b.profileIds.length} perfil</Badge>}
                     </div>
                   )}
@@ -103,6 +105,7 @@ export function SalesPageEditor({
                     key={current.id}
                     block={current}
                     profiles={config.profiles}
+                    quiz={config.quiz}
                     onChange={updateBlock}
                     onDuplicate={() => {
                       const copy = { ...structuredClone(current), id: uid("b") };
@@ -127,7 +130,21 @@ export function SalesPageEditor({
             <OfferEditor offer={offer} onChange={setOffer} product={product} />
           </TabsContent>
 
-          <TabsContent value="theme">
+          <TabsContent value="theme" className="space-y-5">
+            <Card>
+              <CardHeader><CardTitle>Marca</CardTitle></CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                <Field label="Nome da marca/produto" hint="Usado no cabeçalho, nos mockups gerados e no rodapé.">
+                  <Input value={salesPage.brand.name} onChange={(e) => s.setValue({ offer, salesPage: { ...salesPage, brand: { ...salesPage.brand, name: e.target.value } } })} />
+                </Field>
+                <Field label="Logo (URL, opcional)" hint="Sem logo, o nome é exibido como marca tipográfica.">
+                  <Input value={salesPage.brand.logoUrl} placeholder="https://..." onChange={(e) => s.setValue({ offer, salesPage: { ...salesPage, brand: { ...salesPage.brand, logoUrl: e.target.value } } })} />
+                </Field>
+                <Field label="Slogan" className="sm:col-span-2">
+                  <Input value={salesPage.brand.tagline} onChange={(e) => s.setValue({ offer, salesPage: { ...salesPage, brand: { ...salesPage.brand, tagline: e.target.value } } })} />
+                </Field>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader><CardTitle>Aparência da página de vendas</CardTitle></CardHeader>
               <CardContent>
@@ -163,26 +180,46 @@ export function SalesPageEditor({
   );
 }
 
-function ProfileVisibility({ block, profiles, onChange }: { block: Block; profiles: Profile[]; onChange: (b: Block) => void }) {
-  if (!profiles.length) return null;
+function BlockSettings({ block, profiles, onChange }: { block: Block; profiles: Profile[]; onChange: (b: Block) => void }) {
   const toggle = (id: string) =>
     onChange({ ...block, profileIds: block.profileIds.includes(id) ? block.profileIds.filter((x) => x !== id) : [...block.profileIds, id] });
   return (
-    <div className="space-y-2 border-t pt-4">
-      <p className="text-[13px] font-medium">Visível para</p>
-      <p className="text-xs text-muted-foreground">Nenhum perfil marcado = todos os visitantes veem este bloco.</p>
-      <div className="flex flex-wrap gap-1.5">
-        {profiles.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => toggle(p.id)}
-            className={cn("rounded-full border px-2.5 py-1 text-xs cursor-pointer", block.profileIds.includes(p.id) ? "border-accent bg-accent-soft text-accent" : "text-muted-foreground hover:bg-muted")}
-          >
-            {p.name}
-          </button>
-        ))}
+    <div className="space-y-4 border-t pt-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Fundo da seção">
+          <Select value={block.tone} onChange={(e) => onChange({ ...block, tone: e.target.value as Block["tone"] })}>
+            <option value="default">Padrão (fundo da página)</option>
+            <option value="surface">Destaque suave</option>
+            <option value="contrast">Invertido</option>
+          </Select>
+        </Field>
+        <Field label="Grupo de variações (opcional)" hint="Blocos com o mesmo grupo: aparece o do perfil do visitante ou, sem ele, o bloco sem perfis.">
+          <Input
+            value={block.group}
+            placeholder="ex.: hero"
+            className="font-mono text-xs"
+            onChange={(e) => onChange({ ...block, group: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, "") })}
+          />
+        </Field>
       </div>
+      {profiles.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[13px] font-medium">Visível para</p>
+          <p className="text-xs text-muted-foreground">Nenhum perfil marcado = todos os visitantes (ou a versão geral do grupo).</p>
+          <div className="flex flex-wrap gap-1.5">
+            {profiles.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => toggle(p.id)}
+                className={cn("rounded-full border px-2.5 py-1 text-xs cursor-pointer", block.profileIds.includes(p.id) ? "border-accent bg-accent-soft text-accent" : "text-muted-foreground hover:bg-muted")}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -190,12 +227,14 @@ function ProfileVisibility({ block, profiles, onChange }: { block: Block; profil
 function BlockEditor({
   block: b,
   profiles,
+  quiz,
   onChange,
   onDuplicate,
   onRemove,
 }: {
   block: Block;
   profiles: Profile[];
+  quiz: Quiz;
   onChange: (b: Block) => void;
   onDuplicate: () => void;
   onRemove: () => void;
@@ -211,6 +250,70 @@ function BlockEditor({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {b.type === "hero" && (
+          <>
+            <Field label="Selo"><Input value={b.badge} placeholder="Produto digital" onChange={(e) => set({ badge: e.target.value })} /></Field>
+            <Field label="Headline" hint="Use {{perfil}} para inserir o nome do perfil."><Textarea rows={2} value={b.headline} onChange={(e) => set({ headline: e.target.value })} /></Field>
+            <Field label="Subheadline"><Textarea rows={3} value={b.subheadline} onChange={(e) => set({ subheadline: e.target.value })} /></Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Texto do botão" hint="Vazio = texto padrão da oferta."><Input value={b.ctaLabel} onChange={(e) => set({ ctaLabel: e.target.value })} /></Field>
+              <CtaActionField value={b.ctaAction} onChange={(v) => set({ ctaAction: v })} />
+            </div>
+            <Field label="Imagem do mockup (URL, opcional)" hint="Vazio = capa do produto ou mockup gerado com a identidade da página.">
+              <Input value={b.imageUrl} placeholder="https://..." onChange={(e) => set({ imageUrl: e.target.value })} />
+            </Field>
+            <SwitchRow label="Mostrar preço abaixo do botão" checked={b.showPrice} onCheckedChange={(v) => set({ showPrice: v })} />
+          </>
+        )}
+        {b.type === "personalized" && <PersonalizedEditor block={b} quiz={quiz} onChange={onChange} />}
+        {b.type === "text" && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Sobretítulo (opcional)"><Input value={b.eyebrow} onChange={(e) => set({ eyebrow: e.target.value })} /></Field>
+              <Field label="Estilo">
+                <Select value={b.emphasis} onChange={(e) => set({ emphasis: e.target.value })}>
+                  <option value="normal">Normal</option>
+                  <option value="statement">Declaração (título grande, texto com destaque lateral)</option>
+                </Select>
+              </Field>
+            </div>
+            <Field label="Título"><Textarea rows={2} value={b.title} onChange={(e) => set({ title: e.target.value })} /></Field>
+            <Field label="Texto" hint="Linha em branco separa parágrafos."><Textarea rows={6} value={b.body} onChange={(e) => set({ body: e.target.value })} /></Field>
+            <div className="space-y-1.5"><p className="text-[13px] font-medium">Destaques (opcional)</p><StringListEditor value={b.bullets} onChange={(bullets) => set({ bullets })} /></div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Alinhamento">
+                <Select value={b.align} onChange={(e) => set({ align: e.target.value })}>
+                  <option value="left">À esquerda</option>
+                  <option value="center">Centralizado</option>
+                </Select>
+              </Field>
+            </div>
+            <SwitchRow label="Mostrar mockup do produto ao lado" checked={b.showMockup} onCheckedChange={(v) => set({ showMockup: v })} />
+          </>
+        )}
+        {b.type === "offerCard" && (
+          <>
+            <Field label="Título"><Input value={b.title} onChange={(e) => set({ title: e.target.value })} /></Field>
+            <div className="space-y-1.5">
+              <p className="text-[13px] font-medium">Itens incluídos</p>
+              <p className="text-xs text-muted-foreground">Vazio = lista automática com o produto e os bônus cadastrados na oferta (recomendado).</p>
+              <StringListEditor value={b.items} onChange={(items) => set({ items })} />
+            </div>
+            <Field label="Texto do botão" hint="Vazio = texto padrão da oferta."><Input value={b.buttonLabel} onChange={(e) => set({ buttonLabel: e.target.value })} /></Field>
+            <Field label="Texto abaixo do botão"><Input value={b.note} onChange={(e) => set({ note: e.target.value })} /></Field>
+            <Notice>Preço, condições e bônus vêm da aba Oferta. Os botões usam a URL de checkout da campanha.</Notice>
+          </>
+        )}
+        {b.type === "ctaSection" && (
+          <>
+            <Field label="Headline"><Textarea rows={2} value={b.headline} onChange={(e) => set({ headline: e.target.value })} /></Field>
+            <Field label="Subheadline"><Textarea rows={2} value={b.subheadline} onChange={(e) => set({ subheadline: e.target.value })} /></Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Texto do botão"><Input value={b.buttonLabel} onChange={(e) => set({ buttonLabel: e.target.value })} /></Field>
+              <CtaActionField value={b.ctaAction} onChange={(v) => set({ ctaAction: v })} />
+            </div>
+          </>
+        )}
         {(b.type === "headline" || b.type === "subheadline") && (
           <>
             <Field label="Texto" hint="Use {{perfil}} para inserir o nome do perfil do visitante.">
@@ -248,7 +351,9 @@ function BlockEditor({
         )}
         {b.type === "content" && (
           <>
+            <Field label="Sobretítulo (opcional)"><Input value={b.eyebrow} onChange={(e) => set({ eyebrow: e.target.value })} /></Field>
             <Field label="Título"><Input value={b.title} onChange={(e) => set({ title: e.target.value })} /></Field>
+            <SwitchRow label="Exibir como capítulos numerados" checked={b.numbered} onCheckedChange={(v) => set({ numbered: v })} />
             <ObjectListEditor
               value={b.items}
               onChange={(items) => set({ items })}
@@ -315,7 +420,7 @@ function BlockEditor({
         {b.type === "footer" && (
           <Field label="Texto do rodapé"><Textarea value={b.text} onChange={(e) => set({ text: e.target.value })} /></Field>
         )}
-        <ProfileVisibility block={b} profiles={profiles} onChange={onChange} />
+        <BlockSettings block={b} profiles={profiles} onChange={onChange} />
       </CardContent>
     </Card>
   );
@@ -386,6 +491,17 @@ function OfferEditor({ offer, onChange, product }: { offer: Offer; onChange: (o:
         </CardContent>
       </Card>
       <Card>
+        <CardHeader><CardTitle>Produto</CardTitle></CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <Field label="Nome do produto" hint="Exibido nos mockups e no card da oferta.">
+            <Input value={offer.productName} onChange={(e) => set({ productName: e.target.value })} />
+          </Field>
+          <Field label="Capa do produto (URL, opcional)" hint="Vazio = mockup gerado com a identidade da página.">
+            <Input value={offer.coverImageUrl} placeholder="https://..." onChange={(e) => set({ coverImageUrl: e.target.value })} />
+          </Field>
+        </CardContent>
+      </Card>
+      <Card>
         <CardHeader><CardTitle>Checkout</CardTitle></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Field label="URL de checkout" hint="O FunnelOS adiciona a sessão e as UTMs para atribuir a venda.">
@@ -403,15 +519,115 @@ function OfferEditor({ offer, onChange, product }: { offer: Offer; onChange: (o:
             <ObjectListEditor
               value={offer.bonuses}
               onChange={(v) => set({ bonuses: v })}
-              empty={{ title: "", description: "" }}
-              fields={[{ key: "title", label: "Título" }, { key: "description", label: "Descrição", multiline: true }]}
+              empty={{ title: "", description: "", imageUrl: "" }}
+              fields={[
+                { key: "title", label: "Título" },
+                { key: "description", label: "Descrição", multiline: true },
+                { key: "imageUrl", label: "Capa do bônus (URL, opcional — vazio gera um mockup)" },
+              ]}
               addLabel="Adicionar bônus"
             />
           </div>
-          <Field label="Garantia" hint="Conforme a política real do produto."><Textarea value={offer.guarantee} onChange={(e) => set({ guarantee: e.target.value })} /></Field>
+          <div className="grid gap-4 sm:grid-cols-[1fr_160px]">
+            <Field label="Garantia (texto)" hint="Conforme a política real do produto. Vazio + sem período = seção de garantia oculta.">
+              <Textarea value={offer.guarantee} onChange={(e) => set({ guarantee: e.target.value })} />
+            </Field>
+            <Field label="Período (dias)" hint="Opcional">
+              <Input
+                type="number"
+                min={1}
+                max={365}
+                value={offer.guaranteeDays ?? ""}
+                onChange={(e) => set({ guaranteeDays: e.target.value ? Math.max(1, Math.min(365, Math.round(Number(e.target.value)))) : null })}
+              />
+            </Field>
+          </div>
         </CardContent>
       </Card>
       <Notice>Contadores regressivos, escassez artificial e descontos fictícios não são suportados por decisão de produto.</Notice>
     </div>
+  );
+}
+
+function CtaActionField({ value, onChange }: { value: "offer" | "checkout"; onChange: (v: "offer" | "checkout") => void }) {
+  return (
+    <Field label="Ação do botão">
+      <Select value={value} onChange={(e) => onChange(e.target.value as "offer" | "checkout")}>
+        <option value="offer">Rolar até o card da oferta</option>
+        <option value="checkout">Ir para o checkout</option>
+      </Select>
+    </Field>
+  );
+}
+
+function PersonalizedEditor({ block: b, quiz, onChange }: { block: Extract<Block, { type: "personalized" }>; quiz: Quiz; onChange: (b: Block) => void }) {
+  const ruleCtx = useMemo(() => ({ quiz, attributes: knownAttributes(quiz) }), [quiz]);
+  const set = (patch: Partial<typeof b>) => onChange({ ...b, ...patch });
+  return (
+    <>
+      <Notice>
+        Exibe as <b>respostas reais</b> do visitante e as interpretações cujas condições forem atendidas (mesmo motor das regras de segmentação).
+        Visitantes que chegam sem responder o quiz não veem este bloco.
+      </Notice>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Sobretítulo"><Input value={b.eyebrow} onChange={(e) => set({ eyebrow: e.target.value })} /></Field>
+        <Field label="Máx. de interpretações exibidas">
+          <Input type="number" min={1} max={10} value={b.maxInsights} onChange={(e) => set({ maxInsights: Math.max(1, Math.min(10, Number(e.target.value) || 1)) })} />
+        </Field>
+      </div>
+      <Field label="Título"><Textarea rows={2} value={b.title} onChange={(e) => set({ title: e.target.value })} /></Field>
+      <Field label="Introdução (opcional)"><Textarea rows={2} value={b.intro} onChange={(e) => set({ intro: e.target.value })} /></Field>
+
+      <div className="space-y-2">
+        <p className="text-[13px] font-medium">Respostas exibidas</p>
+        {b.summary.map((item, i) => (
+          <div key={item.id} className="flex gap-2">
+            <Input value={item.label} placeholder="Rótulo" onChange={(e) => set({ summary: b.summary.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} />
+            <Select value={item.questionId} onChange={(e) => set({ summary: b.summary.map((x, j) => (j === i ? { ...x, questionId: e.target.value } : x)) })}>
+              {!quiz.questions.some((q) => q.id === item.questionId) && <option value={item.questionId}>⚠ Pergunta removida</option>}
+              {quiz.questions.map((q, n) => <option key={q.id} value={q.id}>{n + 1}. {q.title.slice(0, 40)}</option>)}
+            </Select>
+            <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0" aria-label="Remover" onClick={() => set({ summary: b.summary.filter((_, j) => j !== i) })}>
+              <Trash2 className="text-muted-foreground" />
+            </Button>
+          </div>
+        ))}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!quiz.questions.length}
+          onClick={() => set({ summary: [...b.summary, { id: uid("s"), label: quiz.questions[0]?.title.slice(0, 40) ?? "Resposta", questionId: quiz.questions[0]?.id ?? "" }] })}
+        >
+          <Plus /> Adicionar resposta
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-[13px] font-medium">Interpretações condicionais</p>
+        <p className="text-xs text-muted-foreground">Avaliadas na ordem; aparecem as primeiras atendidas, até o máximo configurado. Não prometa resultados financeiros.</p>
+        {b.insights.map((ins, i) => (
+          <div key={ins.id} className="space-y-2 rounded-md border bg-muted/20 p-3">
+            <Input value={ins.title} placeholder="Título" onChange={(e) => set({ insights: b.insights.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)) })} />
+            <Textarea rows={2} value={ins.text} placeholder="Texto" onChange={(e) => set({ insights: b.insights.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)) })} />
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Exibir quando</p>
+            <GroupEditor group={ins.when} ctx={ruleCtx} depth={0} onChange={(g) => set({ insights: b.insights.map((x, j) => (j === i ? { ...x, when: g } : x)) })} />
+            <div className="flex justify-end gap-1">
+              <Button type="button" variant="ghost" size="xs" disabled={i === 0} onClick={() => { const l = [...b.insights]; [l[i - 1], l[i]] = [l[i], l[i - 1]]; set({ insights: l }); }}>Subir</Button>
+              <Button type="button" variant="danger-ghost" size="xs" onClick={() => set({ insights: b.insights.filter((_, j) => j !== i) })}><Trash2 /> Remover</Button>
+            </div>
+          </div>
+        ))}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => set({ insights: [...b.insights, { id: uid("i"), title: "", text: "", when: { kind: "group", id: uid("g"), combinator: "and", children: [newCondition(ruleCtx)] } }] })}
+        >
+          <Plus /> Adicionar interpretação
+        </Button>
+      </div>
+      <Field label="Texto quando nenhuma interpretação se aplica"><Textarea rows={2} value={b.fallbackText} onChange={(e) => set({ fallbackText: e.target.value })} /></Field>
+    </>
   );
 }

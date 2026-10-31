@@ -19,7 +19,10 @@ import {
   checkoutRedirect,
   completeQuiz,
   markOfferViewed,
+  markPersonalizedViewed,
   markResultViewed,
+  markSalesPageViewed,
+  recordPurchaseButtonClick,
   markStarted,
   startVisit,
   submitAnswer,
@@ -142,7 +145,11 @@ describe("fluxo público completo", () => {
     await markResultViewed(sessionId);
     await expect(captureLead(sessionId, { email: "x@y.com", consent: false }, "1.1.1.1")).rejects.toThrow();
     await captureLead(sessionId, { name: "Ana", email: "ANA@exemplo.com", consent: true }, "1.1.1.1");
+    await markSalesPageViewed(sessionId);
+    await markSalesPageViewed(sessionId); // uma vez por sessão
+    await markPersonalizedViewed(sessionId);
     await markOfferViewed(sessionId);
+    await recordPurchaseButtonClick(sessionId, "b_offer");
 
     const url = new URL(await checkoutRedirect(sessionId));
     expect(url.searchParams.get("fos_sid")).toBe(sessionId);
@@ -150,7 +157,7 @@ describe("fluxo público completo", () => {
 
     const range = parseRange({ period: "7d" });
     let counts = await funnelCounts(range, campaign.id);
-    expect(counts).toMatchObject({ visitors: 1, started: 1, completed: 1, resultViews: 1, offerViews: 1, checkoutClicks: 1, leads: 1, purchases: 0 });
+    expect(counts).toMatchObject({ visitors: 1, started: 1, completed: 1, resultViews: 1, salesPageViews: 1, offerViews: 1, purchaseClicks: 1, checkoutClicks: 1, leads: 1, purchases: 0 });
 
     // clique não é venda; venda só via confirmação
     const p1 = await recordPurchase("generic", { externalId: "T1", status: "confirmed", amountCents: 4790, currency: "BRL", sessionId });
@@ -171,6 +178,12 @@ describe("fluxo público completo", () => {
     expect(types.filter((t) => t === "quiz_started")).toHaveLength(1);
     expect(types.filter((t) => t === "result_viewed")).toHaveLength(1);
     expect(types.filter((t) => t === "purchase_confirmed")).toHaveLength(1);
+    expect(types.filter((t) => t === "sales_page_view")).toHaveLength(1);
+    expect(types).toContain("personalized_content_view");
+    expect(types).toContain("purchase_button_click");
+    expect(types).toContain("checkout_redirect");
+    // o clique e o redirecionamento não geram venda
+    expect(evs.filter((e) => e.type === "checkout_redirect").every((e) => e.utmSource === "facebook")).toBe(true);
     expect(evs.every((e) => e.utmSource === "facebook" && e.device === "mobile")).toBe(true);
     expect(JSON.stringify(evs)).not.toContain("ana@exemplo.com"); // sem PII nos eventos
 

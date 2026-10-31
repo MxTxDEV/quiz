@@ -15,7 +15,10 @@ export const settingSchemas = {
   privacy: z.object({
     controllerName: z.string().trim().max(200).default(""),
     contactEmail: z.union([z.literal(""), z.string().trim().email("E-mail inválido")]).default(""),
+    /** CPF/CNPJ do responsável, exibido no rodapé das páginas de vendas */
+    document: z.string().trim().max(40).default(""),
     policyText: z.string().trim().max(30000).default(""),
+    termsText: z.string().trim().max(30000).default(""),
   }),
   outgoingWebhook: z.object({
     url: httpsUrl.default(""),

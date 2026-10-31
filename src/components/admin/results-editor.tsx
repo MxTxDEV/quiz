@@ -166,12 +166,12 @@ const operatorLabels: Record<Operator, string> = {
   not_answered: "não foi respondida",
 };
 
-type Ctx = {
+export type RuleCtx = {
   quiz: Quiz;
   attributes: Map<string, Set<string>>;
 };
 
-function knownAttributes(quiz: Quiz) {
+export function knownAttributes(quiz: Quiz) {
   const map = new Map<string, Set<string>>();
   const add = (k: string, v?: string) => {
     if (!k) return;
@@ -188,7 +188,7 @@ function knownAttributes(quiz: Quiz) {
   return map;
 }
 
-function newCondition(ctx: Ctx): Condition {
+export function newCondition(ctx: RuleCtx): Condition {
   const firstAttr = [...ctx.attributes.keys()][0];
   return firstAttr
     ? { kind: "condition", id: uid("c"), source: "attribute", target: firstAttr, operator: "equals", value: [...(ctx.attributes.get(firstAttr) ?? [])][0] ?? "" }
@@ -196,7 +196,7 @@ function newCondition(ctx: Ctx): Condition {
 }
 
 function RulesEditor({ rules, profiles, quiz, onChange }: { rules: Rule[]; profiles: Profile[]; quiz: Quiz; onChange: (r: Rule[]) => void }) {
-  const ctx: Ctx = useMemo(() => ({ quiz, attributes: knownAttributes(quiz) }), [quiz]);
+  const ctx: RuleCtx = useMemo(() => ({ quiz, attributes: knownAttributes(quiz) }), [quiz]);
   const update = (id: string, patch: Partial<Rule>) => onChange(rules.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   const defaultProfile = profiles.find((p) => p.isDefault);
 
@@ -274,7 +274,7 @@ function reId(rule: Rule): Rule {
   return { ...structuredClone(rule), id: uid("r"), name: `${rule.name} (cópia)`, when: walk(rule.when) };
 }
 
-function GroupEditor({ group, ctx, depth, onChange, onRemove }: { group: ConditionGroup; ctx: Ctx; depth: number; onChange: (g: ConditionGroup) => void; onRemove?: () => void }) {
+export function GroupEditor({ group, ctx, depth, onChange, onRemove }: { group: ConditionGroup; ctx: RuleCtx; depth: number; onChange: (g: ConditionGroup) => void; onRemove?: () => void }) {
   const setChild = (i: number, child: Condition | ConditionGroup) => onChange({ ...group, children: group.children.map((c, j) => (j === i ? child : c)) });
   const removeChild = (i: number) => onChange({ ...group, children: group.children.filter((_, j) => j !== i) });
   return (
@@ -323,7 +323,7 @@ function GroupEditor({ group, ctx, depth, onChange, onRemove }: { group: Conditi
   );
 }
 
-function ConditionRow({ cond, ctx, onChange, onRemove }: { cond: Condition; ctx: Ctx; onChange: (c: Condition) => void; onRemove: () => void }) {
+function ConditionRow({ cond, ctx, onChange, onRemove }: { cond: Condition; ctx: RuleCtx; onChange: (c: Condition) => void; onRemove: () => void }) {
   const question = cond.source === "answer" ? ctx.quiz.questions.find((q) => q.id === cond.target) : undefined;
   const isChoice = question && (question.type === "single" || question.type === "multiple" || question.type === "yes_no");
   const isNumeric = cond.source === "score" || question?.type === "number" || question?.type === "range";

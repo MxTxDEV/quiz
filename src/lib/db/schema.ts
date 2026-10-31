@@ -11,7 +11,9 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import type { Bonus, CampaignConfig } from "@/lib/domain/config";
+import type { CampaignConfig } from "@/lib/domain/config";
+
+type ProductBonus = { title: string; description: string; imageUrl?: string };
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 const updatedAt = () =>
@@ -54,7 +56,7 @@ export const products = pgTable("products", {
   checkoutUrl: text("checkout_url").notNull().default(""),
   benefits: jsonb("benefits").$type<string[]>().notNull().default([]),
   deliverables: jsonb("deliverables").$type<string[]>().notNull().default([]),
-  bonuses: jsonb("bonuses").$type<Bonus[]>().notNull().default([]),
+  bonuses: jsonb("bonuses").$type<ProductBonus[]>().notNull().default([]),
   guarantee: text("guarantee").notNull().default(""),
   status: text("status", { enum: ["active", "inactive"] }).notNull().default("active"),
   createdAt: createdAt(),
@@ -132,8 +134,12 @@ export const eventTypes = [
   "question_answered",
   "quiz_completed",
   "result_viewed",
-  "offer_viewed",
-  "checkout_clicked",
+  "sales_page_view",
+  "personalized_content_view",
+  "offer_viewed", // seção da oferta exibida (antes: página de vendas exibida)
+  "purchase_button_click", // clique em botão de compra (registrado pelo navegador)
+  "checkout_redirect", // redirecionamento ao checkout (registrado pelo servidor)
+  "checkout_clicked", // legado: equivalente a checkout_redirect
   "purchase_confirmed",
   "lead_captured",
 ] as const;

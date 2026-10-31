@@ -12,8 +12,9 @@ const metaMap: Record<string, string | null> = {
   quiz_started: "StartQuiz",
   quiz_completed: "CompleteRegistration",
   lead_captured: "Lead",
-  offer_viewed: "ViewContent",
-  checkout_clicked: "InitiateCheckout",
+  sales_page_view: "ViewContent",
+  offer_viewed: "ViewOffer",
+  purchase_button_click: "InitiateCheckout",
 };
 const standardMeta = new Set(["Lead", "ViewContent", "InitiateCheckout", "CompleteRegistration"]);
 

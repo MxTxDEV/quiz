@@ -6,7 +6,7 @@ import { providers, signGeneric } from "@/lib/integrations/checkout-providers";
 import { createHmac } from "node:crypto";
 
 describe("deriveMetrics", () => {
-  const base = { visitors: 200, started: 100, completed: 50, leads: 10, resultViews: 50, offerViews: 40, checkoutClicks: 20, purchases: 4, revenueCents: 40000, adSpendCents: 20000 };
+  const base = { visitors: 200, started: 100, completed: 50, leads: 10, resultViews: 50, salesPageViews: 45, offerViews: 40, purchaseClicks: 25, checkoutClicks: 20, purchases: 4, revenueCents: 40000, adSpendCents: 20000 };
   it("calcula as fórmulas do briefing", () => {
     const m = deriveMetrics(base);
     expect(m.startRate).toBe(0.5); // iniciados / visitantes

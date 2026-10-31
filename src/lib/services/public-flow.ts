@@ -158,6 +158,26 @@ export async function markOfferViewed(sessionId: string) {
   await recordEventOnce(session, "offer_viewed", { profileId: session.profileId });
 }
 
+export async function markSalesPageViewed(sessionId: string) {
+  const { session } = await loadSession(sessionId);
+  await recordEventOnce(session, "sales_page_view", { profileId: session.profileId });
+}
+
+export async function markPersonalizedViewed(sessionId: string) {
+  const { session } = await loadSession(sessionId);
+  await recordEventOnce(session, "personalized_content_view", { profileId: session.profileId });
+}
+
+/** Clique em botão de compra (intenção). Não é venda e não é o redirecionamento. */
+export async function recordPurchaseButtonClick(sessionId: string, blockId?: string | null) {
+  const { session, config } = await loadSession(sessionId);
+  await recordEvent(session, "purchase_button_click", {
+    profileId: session.profileId,
+    valueCents: config.offer.priceCents,
+    metadata: blockId ? { blockId: blockId.slice(0, 64) } : {},
+  });
+}
+
 export const leadInputSchema = z.object({
   name: z.string().trim().max(120).optional().default(""),
   email: z.string().trim().toLowerCase().email("E-mail inválido").max(200),
@@ -213,7 +233,7 @@ export async function checkoutRedirect(sessionId: string, blockId?: string | nul
     utm_term: session.utmTerm,
   });
   if (!url) throw new PublicFlowError("Checkout não configurado", 404);
-  await recordEvent(session, "checkout_clicked", {
+  await recordEvent(session, "checkout_redirect", {
     profileId: session.profileId,
     valueCents: config.offer.priceCents,
     metadata: blockId ? { blockId: blockId.slice(0, 64) } : {},

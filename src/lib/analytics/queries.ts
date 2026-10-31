@@ -44,7 +44,9 @@ export async function funnelCounts(range: Range, campaignId?: string | null): Pr
       count(distinct session_id) filter (where type = 'quiz_completed') as completed,
       count(distinct session_id) filter (where type = 'result_viewed') as result_views,
       count(distinct session_id) filter (where type = 'offer_viewed') as offer_views,
-      count(distinct session_id) filter (where type = 'checkout_clicked') as checkout_clicks
+      count(distinct session_id) filter (where type = 'sales_page_view') as sales_page_views,
+      count(distinct session_id) filter (where type = 'purchase_button_click') as purchase_clicks,
+      count(distinct session_id) filter (where type in ('checkout_redirect', 'checkout_clicked')) as checkout_clicks
     from events
     where created_at >= ${range.from.toISOString()} and created_at < ${range.to.toISOString()}
     ${campaignFilter(sql`campaign_id`, campaignId)}
@@ -71,7 +73,9 @@ export async function funnelCounts(range: Range, campaignId?: string | null): Pr
     started: num(e.started),
     completed: num(e.completed),
     resultViews: num(e.result_views),
+    salesPageViews: num(e.sales_page_views),
     offerViews: num(e.offer_views),
+    purchaseClicks: num(e.purchase_clicks),
     checkoutClicks: num(e.checkout_clicks),
     leads: num(l.leads),
     purchases: num(p.purchases),
@@ -130,6 +134,7 @@ export async function campaignComparison(range: Range): Promise<CampaignRow[]> {
       coalesce(e.visitors, 0) as visitors, coalesce(e.started, 0) as started, coalesce(e.completed, 0) as completed,
       coalesce(e.result_views, 0) as result_views, coalesce(e.offer_views, 0) as offer_views,
       coalesce(e.checkout_clicks, 0) as checkout_clicks,
+      coalesce(e.sales_page_views, 0) as sales_page_views, coalesce(e.purchase_clicks, 0) as purchase_clicks,
       coalesce(l.leads, 0) as leads, coalesce(p.purchases, 0) as purchases, coalesce(p.revenue, 0) as revenue,
       coalesce(a.spend, 0) as spend
     from campaigns c
@@ -140,7 +145,9 @@ export async function campaignComparison(range: Range): Promise<CampaignRow[]> {
         count(distinct session_id) filter (where type = 'quiz_completed') as completed,
         count(distinct session_id) filter (where type = 'result_viewed') as result_views,
         count(distinct session_id) filter (where type = 'offer_viewed') as offer_views,
-        count(distinct session_id) filter (where type = 'checkout_clicked') as checkout_clicks
+        count(distinct session_id) filter (where type = 'sales_page_view') as sales_page_views,
+      count(distinct session_id) filter (where type = 'purchase_button_click') as purchase_clicks,
+      count(distinct session_id) filter (where type in ('checkout_redirect', 'checkout_clicked')) as checkout_clicks
       from events where created_at >= ${range.from.toISOString()} and created_at < ${range.to.toISOString()}
       group by campaign_id
     ) e on e.campaign_id = c.id
@@ -170,7 +177,9 @@ export async function campaignComparison(range: Range): Promise<CampaignRow[]> {
     started: num(r.started),
     completed: num(r.completed),
     resultViews: num(r.result_views),
+    salesPageViews: num(r.sales_page_views),
     offerViews: num(r.offer_views),
+    purchaseClicks: num(r.purchase_clicks),
     checkoutClicks: num(r.checkout_clicks),
     leads: num(r.leads),
     purchases: num(r.purchases),
@@ -204,7 +213,7 @@ export async function byProfile(range: Range, campaignId: string): Promise<Segme
   const rows = (await db.execute(sql`
     select s.profile_id as key,
       count(*) as completed,
-      count(*) filter (where exists (select 1 from events e where e.session_id = s.id and e.type = 'checkout_clicked')) as clicks,
+      count(*) filter (where exists (select 1 from events e where e.session_id = s.id and e.type in ('checkout_redirect', 'checkout_clicked'))) as clicks,
       coalesce(sum(p.n), 0) as purchases, coalesce(sum(p.revenue), 0) as revenue
     from visitor_sessions s
     left join (
@@ -235,7 +244,7 @@ export async function bySessionDimension(
     select coalesce(${col}, '(não definido)') as key,
       count(distinct s.visitor_id) as visitors,
       count(*) filter (where s.completed_at is not null) as completed,
-      count(*) filter (where exists (select 1 from events e where e.session_id = s.id and e.type = 'checkout_clicked')) as clicks,
+      count(*) filter (where exists (select 1 from events e where e.session_id = s.id and e.type in ('checkout_redirect', 'checkout_clicked'))) as clicks,
       coalesce(sum(p.n), 0) as purchases, coalesce(sum(p.revenue), 0) as revenue
     from visitor_sessions s
     left join (

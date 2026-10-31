@@ -72,6 +72,29 @@ BASE_URL=http://localhost:3000 node e2e/flow.mjs   # requer Playwright e banco c
 - **Pixels**: Meta Pixel / GA4 / GTM globais ou por campanha, sem dados pessoais nos eventos.
 - **Papéis**: proprietário (tudo), editor (campanhas/produtos/modelos), leitura.
 
+## Página de vendas personalizada (ex.: Rota Invisível)
+
+O modelo **“Rota Invisível — quiz + página de vendas”** traz o funil completo: quiz de 7 perguntas, 4 perfis
+e uma página de vendas preta/laranja com hero, resultado personalizado, problema, solução, capítulos, bônus,
+público, card de oferta, garantia, FAQ, CTA final e rodapé. Tudo é editável em **Campanha → Página de vendas**.
+
+- **Variações por perfil**: blocos com o mesmo *grupo* (ex.: `hero`) — aparece o direcionado ao perfil do
+  visitante; sem correspondência, o bloco genérico. Visualize por perfil no editor ou em “Visualizar rascunho”.
+- **Resultado personalizado**: mostra as respostas reais do visitante e interpretações condicionais avaliadas
+  pelo mesmo motor das regras. Quem chega sem responder o quiz não vê esse bloco.
+- **Nada inventado**: bônus só aparecem se cadastrados na oferta; a garantia (texto e período em dias) só aparece
+  se configurada; preço de referência exige justificativa. Responsável, CPF/CNPJ, contato e Termos de Uso vêm de
+  Configurações.
+- **Mockups**: usam a capa cadastrada (produto, hero ou bônus) ou geram uma capa 3D em CSS com a identidade da página.
+- **Eventos**: `sales_page_view`, `personalized_content_view`, `offer_viewed` (card da oferta visível),
+  `purchase_button_click` (navegador) e `checkout_redirect` (servidor). Nenhum deles é venda.
+
+Para usar: Modelos → “Rota Invisível” → Usar modelo. Sem produto associado, a oferta do modelo (R$ 19,90 e os
+4 bônus) é mantida; com produto, os dados do produto substituem os da oferta. Depois, preencha a URL de checkout e
+a garantia real na aba Oferta e publique.
+
+E2E desta página: `BASE_URL=... node e2e/rota.mjs` (testa os 4 perfis, celular/desktop, UTMs, checkout e eventos).
+
 ## Estado das fases
 
 | Fase | Status |

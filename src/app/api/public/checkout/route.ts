@@ -5,7 +5,7 @@ import { logError } from "@/lib/security/logger";
 
 /**
  * GET /api/public/checkout?s=<sessão>&b=<bloco>
- * Registra checkout_clicked e redireciona para o checkout externo (funciona sem JavaScript).
+ * Registra checkout_redirect e redireciona para o checkout externo (funciona sem JavaScript).
  */
 export async function GET(req: NextRequest) {
   const ip = clientIp(req.headers);

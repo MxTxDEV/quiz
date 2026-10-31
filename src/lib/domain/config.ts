@@ -178,6 +178,8 @@ export type Profile = z.infer<typeof profileSchema>;
 export const bonusSchema = z.object({
   title: shortText.min(1),
   description: z.string().max(1000).default(""),
+  /** capa do bônus; vazio = mockup gerado com a identidade da página */
+  imageUrl: url.default(""),
 });
 export type Bonus = z.infer<typeof bonusSchema>;
 
@@ -194,6 +196,11 @@ export const offerSchema = z.object({
   checkoutUrl: url.default(""),
   buttonLabel: z.string().max(60).default("Quero garantir meu acesso"),
   guarantee: z.string().max(1000).default(""),
+  /** período real de garantia em dias; null = não exibir período */
+  guaranteeDays: z.number().int().min(1).max(365).nullable().default(null),
+  /** nome e capa do produto (preenchidos a partir do produto cadastrado) */
+  productName: z.string().max(200).default(""),
+  coverImageUrl: url.default(""),
 });
 export type Offer = z.infer<typeof offerSchema>;
 
@@ -203,7 +210,29 @@ const blockBase = {
   id,
   /** vazio = visível para todos os perfis */
   profileIds: z.array(id).max(50).default([]),
+  /**
+   * Grupo de variações: entre blocos do mesmo grupo, exibe apenas o mais específico
+   * para o perfil do visitante (com perfil correspondente) ou, na falta, o genérico.
+   */
+  group: z.string().max(40).regex(/^[a-z0-9_-]*$/, "Use letras minúsculas, números, - e _").default(""),
+  /** fundo da seção */
+  tone: z.enum(["default", "surface", "contrast"]).default("default"),
 };
+
+const ctaAction = z.enum(["offer", "checkout"]).default("checkout");
+
+export const personalizedSummarySchema = z.object({
+  id,
+  label: shortText.min(1),
+  questionId: z.string().max(64),
+});
+export const personalizedInsightSchema = z.object({
+  id,
+  title: shortText.default(""),
+  text: z.string().max(1000).default(""),
+  when: conditionGroupSchema,
+});
+export type PersonalizedInsight = z.infer<typeof personalizedInsightSchema>;
 
 export const blockSchema = z.discriminatedUnion("type", [
   z.object({ ...blockBase, type: z.literal("headline"), text: shortText.default(""), align: z.enum(["left", "center"]).default("center") }),
@@ -212,7 +241,67 @@ export const blockSchema = z.discriminatedUnion("type", [
   z.object({ ...blockBase, type: z.literal("video"), url: url.default("") }),
   z.object({ ...blockBase, type: z.literal("mockup"), url: url.default(""), caption: z.string().max(200).default("") }),
   z.object({ ...blockBase, type: z.literal("benefits"), title: shortText.default("O que você vai conseguir"), useOffer: z.boolean().default(true), items: z.array(z.string().max(300)).max(30).default([]) }),
-  z.object({ ...blockBase, type: z.literal("content"), title: shortText.default("O que está incluído"), items: z.array(z.object({ title: shortText, description: z.string().max(1000).default("") })).max(30).default([]) }),
+  z.object({
+    ...blockBase,
+    type: z.literal("content"),
+    eyebrow: z.string().max(80).default(""),
+    title: shortText.default("O que está incluído"),
+    /** exibe os itens como capítulos numerados */
+    numbered: z.boolean().default(false),
+    items: z.array(z.object({ title: shortText, description: z.string().max(1000).default("") })).max(30).default([]),
+  }),
+  z.object({
+    ...blockBase,
+    type: z.literal("hero"),
+    badge: z.string().max(60).default(""),
+    headline: shortText.default(""),
+    subheadline: z.string().max(1000).default(""),
+    imageUrl: url.default(""),
+    ctaLabel: z.string().max(60).default(""),
+    ctaAction,
+    showPrice: z.boolean().default(false),
+  }),
+  z.object({
+    ...blockBase,
+    type: z.literal("personalized"),
+    eyebrow: z.string().max(80).default("Analisamos suas respostas"),
+    title: shortText.default(""),
+    intro: z.string().max(1000).default(""),
+    summary: z.array(personalizedSummarySchema).max(12).default([]),
+    insights: z.array(personalizedInsightSchema).max(30).default([]),
+    maxInsights: z.number().int().min(1).max(10).default(3),
+    fallbackText: z.string().max(1000).default(""),
+  }),
+  z.object({
+    ...blockBase,
+    type: z.literal("text"),
+    eyebrow: z.string().max(80).default(""),
+    title: shortText.default(""),
+    body: z.string().max(4000).default(""),
+    align: z.enum(["left", "center"]).default("left"),
+    emphasis: z.enum(["normal", "statement"]).default("normal"),
+    /** lista de destaques abaixo do texto */
+    bullets: z.array(z.string().max(200)).max(12).default([]),
+    /** exibe o mockup do produto ao lado do texto */
+    showMockup: z.boolean().default(false),
+  }),
+  z.object({
+    ...blockBase,
+    type: z.literal("offerCard"),
+    title: shortText.default("Seu acesso"),
+    /** vazio = lista automática (produto + bônus da oferta) */
+    items: z.array(z.string().max(200)).max(20).default([]),
+    buttonLabel: z.string().max(60).default(""),
+    note: z.string().max(300).default(""),
+  }),
+  z.object({
+    ...blockBase,
+    type: z.literal("ctaSection"),
+    headline: shortText.default(""),
+    subheadline: z.string().max(1000).default(""),
+    buttonLabel: z.string().max(60).default(""),
+    ctaAction,
+  }),
   z.object({ ...blockBase, type: z.literal("bonuses"), title: shortText.default("Bônus incluídos"), useOffer: z.boolean().default(true) }),
   z.object({
     ...blockBase,
@@ -229,8 +318,16 @@ export const blockSchema = z.discriminatedUnion("type", [
 export type Block = z.infer<typeof blockSchema>;
 export type BlockType = Block["type"];
 
+export const brandSchema = z.object({
+  name: z.string().max(80).default(""),
+  tagline: z.string().max(200).default(""),
+  logoUrl: url.default(""),
+});
+export type Brand = z.infer<typeof brandSchema>;
+
 export const salesPageSchema = z.object({
   theme: themeSchema.default(themeSchema.parse({})),
+  brand: brandSchema.default(brandSchema.parse({})),
   blocks: z.array(blockSchema).max(80).default([]),
 });
 export type SalesPage = z.infer<typeof salesPageSchema>;
