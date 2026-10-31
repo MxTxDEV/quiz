@@ -27,7 +27,7 @@ import {
 import { recordPurchase } from "@/lib/services/purchases";
 import { eraseLead } from "@/lib/services/leads";
 import { addAdSpend } from "@/lib/services/integrations";
-import { funnelCounts, parseRange, answersByQuestion, byProfile, bySessionDimension } from "@/lib/analytics/queries";
+import { funnelCounts, parseRange, answersByQuestion, byProfile, bySessionDimension, businessDate } from "@/lib/analytics/queries";
 import { deriveMetrics } from "@/lib/analytics/metrics";
 import { newQuestion } from "@/lib/domain/defaults";
 import { resetDb } from "./helpers";
@@ -157,7 +157,7 @@ describe("fluxo público completo", () => {
     expect(p1.created).toBe(true);
     const p2 = await recordPurchase("generic", { externalId: "T1", status: "confirmed", amountCents: 4790, currency: "BRL", sessionId });
     expect(p2.created).toBe(false); // webhook repetido não duplica
-    await addAdSpend({ campaignId: campaign.id, date: new Date().toISOString().slice(0, 10), amountCents: 2000 });
+    await addAdSpend({ campaignId: campaign.id, date: businessDate(), amountCents: 2000 });
 
     counts = await funnelCounts(range, campaign.id);
     expect(counts.purchases).toBe(1);
