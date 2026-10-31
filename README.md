@@ -49,12 +49,12 @@ BASE_URL=http://localhost:3000 node e2e/flow.mjs   # requer Playwright e banco c
 
 ## Deploy (Vercel + Neon)
 
-1. Crie um banco no Neon e copie a connection string **pooled** (`...-pooler...?sslmode=require`).
-2. Importe o repositório na Vercel e configure `DATABASE_URL`, `NEXT_PUBLIC_APP_URL` (domínio final),
-   `APP_SECRET` (string aleatória longa) e, opcionalmente, `SETUP_TOKEN`.
-3. Rode as migrações e o seed apontando para o Neon (localmente, com o `.env` de produção):
-   `npm run db:migrate && npm run db:seed` — ou use `npm run db:migrate && npm run build` como Build Command.
-4. Acesse `/setup` no domínio publicado e crie o administrador.
+1. Na Vercel: **Storage → Create Database → Neon** e conecte ao projeto (cria `DATABASE_URL` automaticamente).
+   Ou crie o banco em neon.tech e adicione `DATABASE_URL` (connection string *pooled*) em Settings → Environment Variables.
+2. Adicione `APP_SECRET` (string aleatória longa). Opcionais: `SETUP_TOKEN` (protege `/setup`) e
+   `NEXT_PUBLIC_APP_URL` (domínio próprio; sem ela usa o domínio de produção da Vercel).
+3. Faça um novo deploy. O build (`scripts/prebuild.ts`) aplica as migrações e instala os modelos prontos.
+4. Acesse `/setup` e crie o administrador.
 
 ## Como funciona
 

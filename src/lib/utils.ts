@@ -57,6 +57,8 @@ export function centsToInput(cents: number | null | undefined): string {
   return (cents / 100).toFixed(2).replace(".", ",");
 }
 
+/** URL pública: NEXT_PUBLIC_APP_URL ou, na Vercel, o domínio de produção do projeto. */
 export function appUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  return (process.env.NEXT_PUBLIC_APP_URL || (vercel ? `https://${vercel}` : "http://localhost:3000")).replace(/\/$/, "");
 }
