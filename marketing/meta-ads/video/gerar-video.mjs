@@ -152,7 +152,9 @@ window.draw = (t) => {
       document.getElementById("routeHalo").setAttribute("r", 40 + 10 * Math.sin(t * 6));
     }
     if (s.id === "objecao") document.querySelectorAll(".chip").forEach((c) => {
-      const k = +c.dataset.k; const ap = ease((p - k * 0.27) / 0.18);
+      const k = +c.dataset.k;
+      // com marcas de tempo da narração, cada item entra exatamente quando é falado
+      const ap = s.marks ? ease((t - s.marks[k] + 0.1) / 0.3) : ease((p - k * 0.27) / 0.18);
       c.style.opacity = ap; c.style.transform = "translateX(" + (1 - ap) * -60 + "px)";
     });
     if (s.id === "virada") el.querySelector("h1").style.transform = "scale(" + (0.96 + 0.04 * ease(p * 2)) + ")";
