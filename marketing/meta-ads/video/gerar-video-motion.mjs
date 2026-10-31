@@ -7,6 +7,8 @@ import path from "node:path";
 const { chromium } = createRequire(import.meta.url)("playwright");
 
 const [timelinePath, cuesPath, voicePath, sfxPath, musicPath, outPath] = process.argv.slice(2);
+// VARIANT=organico → versão explícita (notas de dinheiro, contas, carteira vazia, pilha de dinheiro) para uso orgânico
+const ORGANIC = process.env.VARIANT === "organico";
 const TL = JSON.parse(readFileSync(timelinePath, "utf8"));
 const CUES = JSON.parse(readFileSync(cuesPath, "utf8"));
 const FPS = 30, W = 1080, H = 1920;
@@ -63,9 +65,19 @@ canvas { position: absolute; inset: 0; }
 .ring { position: absolute; inset: -4px; border-radius: 30px; border: 4px solid #ff6b00; opacity: 0; }
 .arrow { font-size: 130px; color: #ff6b00; font-weight: 900; margin-top: 46px; text-shadow: 0 0 30px rgba(255,107,0,.8); }
 #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.org { display: none; }
+body.organico .org { display: block; }
+.wallet { position: absolute; right: 60px; bottom: 40px; width: 300px; height: 210px; transform: rotate(8deg); }
+.wallet .body { position: absolute; inset: 40px 0 0 0; border-radius: 22px; background: linear-gradient(160deg, #5a4636, #2f241b); border: 3px solid #6d5643; box-shadow: 0 30px 60px -20px rgba(0,0,0,.9); }
+.wallet .flap { position: absolute; left: 0; right: 0; top: 0; height: 90px; border-radius: 22px 22px 6px 6px; background: linear-gradient(180deg, #6b5442, #4a392c); border: 3px solid #7a6150; transform-origin: bottom; transform: rotateX(-60deg); }
+.wallet .inside { position: absolute; left: 22px; right: 22px; top: 62px; height: 80px; border-radius: 10px; background: #1b1511; box-shadow: inset 0 8px 20px rgba(0,0,0,.8); }
+.wallet .tag { position: absolute; left: 0; right: 0; bottom: -64px; text-align: center; font-size: 34px; font-weight: 900; color: #c9c9cf; letter-spacing: .14em; }
+.stack { position: absolute; left: 50%; margin-left: -140px; bottom: -250px; width: 280px; height: 420px; }
+.stack .bl { position: absolute; left: 0; width: 280px; height: 26px; border-radius: 6px; background: linear-gradient(90deg, #1f6f4a, #39a26e 40%, #1f6f4a); border: 2px solid #155c3b; box-shadow: 0 4px 0 #0f4029; }
+.stack .bl::after { content: "R$"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 16px; font-weight: 900; color: rgba(255,255,255,.55); }
 #vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(75% 60% at 50% 45%, transparent 55%, rgba(0,0,0,.75) 100%); }
 .legal { position: absolute; bottom: 360px; left: 0; right: 0; text-align: center; font-size: 22px; color: #77777f; opacity: 0; }
-</style></head><body>
+</style></head><body class="${ORGANIC ? "organico" : ""}">
 <div id="stage">
   <div id="bg"></div><div id="rays"></div><div id="glow"></div><div id="floor"></div>
   <canvas id="fx" width="${W}" height="${H}"></canvas>
@@ -88,6 +100,7 @@ canvas { position: absolute; inset: 0; }
     <svg width="900" height="300" viewBox="0 0 900 300" style="position:absolute;right:-20px;bottom:-30px;opacity:.55">
       <path id="downLine" d="M0 40 L 150 70 L 280 60 L 420 140 L 560 130 L 700 220 L 880 270" fill="none" stroke="#9a9aa3" stroke-width="8" stroke-linejoin="round"/>
     </svg>
+    <div class="wallet org" id="wallet"><div class="body"></div><div class="inside"></div><div class="flap"></div><div class="tag">VAZIA</div></div>
     <div class="chip" data-k="0"><i>1h</i>Pouco tempo?</div>
     <div class="chip" data-k="1"><i>R$</i>Pouco dinheiro?</div>
     <div class="chip" data-k="2"><i>?</i>Sem experiência?</div>
@@ -98,6 +111,7 @@ canvas { position: absolute; inset: 0; }
       <path id="upLine" d="M0 380 L 150 330 L 290 345 L 430 250 L 570 265 L 720 140 L 880 40" fill="none" stroke="#ff6b00" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>
       <polygon id="upArrow" points="880,40 845,48 868,74" fill="#ff6b00"/>
     </svg>
+    <div class="stack org" id="stack">${Array.from({ length: 14 }, (_, i) => `<div class="bl" style="bottom:${i * 28}px;opacity:0"></div>`).join("")}</div>
     <div class="k" style="font-size:112px;position:relative" data-words="Ainda|assim,|existem|caminhos|~para|~você."></div>
   </div>
 
@@ -174,6 +188,54 @@ CUES.filter((c) => c.kind === "coins").forEach((c, ci) => {
     else COINS.push({ t0: c.t + r(1) * 2.2, x: 60 + r(2) * 960, y: -80, vx: (r(3) - .5) * 120, vy: 300 + r(4) * 500, g: 1400, s: 30 + r(5) * 26, spin: 4 + r(6) * 8 });
   }
 });
+// notas de dinheiro (estilizadas, não são réplicas de cédulas reais)
+const BILLS = [];
+const BILL_COLORS = [["#2c5fa8", "#4f86d6"], ["#b8641c", "#e08a3c"], ["#7a8a22", "#a8b83c"], ["#1f6f4a", "#39a26e"]];
+CUES.filter((c) => c.kind === "bills").forEach((c, ci) => {
+  for (let j = 0; j < c.n; j++) {
+    const r = (k) => hash(5000 + ci * 1000 + j * 17 + k);
+    const col = BILL_COLORS[Math.floor(r(9) * BILL_COLORS.length)];
+    if (c.mode === "burst") BILLS.push({ t0: c.t + r(1) * .15, x: 540 + (r(2) - .5) * 160, y: 900, vx: (r(3) - .5) * 1300, vy: -800 - r(4) * 900, g: 1500, drag: 1.6, w: 150 + r(5) * 40, rot: r(6) * 6, spin: (r(7) - .5) * 6, flip: 3 + r(8) * 5, col, val: ["100", "50", "20", "200"][Math.floor(r(10) * 4)] });
+    else BILLS.push({ t0: c.t + r(1) * 2.4, x: 40 + r(2) * 1000, y: -120, vx: (r(3) - .5) * 160, vy: 180 + r(4) * 260, g: 300, drag: .4, w: 140 + r(5) * 50, rot: r(6) * 6, spin: (r(7) - .5) * 3, flip: 2 + r(8) * 4, col, val: ["100", "50", "20", "200"][Math.floor(r(10) * 4)] });
+  }
+});
+function drawBill(b, t) {
+  const d = t - b.t0; if (d < 0 || d > 5) return;
+  const k = Math.exp(-b.drag * d);
+  const x = b.x + b.vx * (1 - k) / b.drag + Math.sin(d * 3 + b.rot) * 40;
+  const y = b.y + b.vy * d + .5 * b.g * d * d;
+  if (y > ${H} + 150) return;
+  const w = b.w, h = w * .46;
+  fx.save(); fx.translate(x, y); fx.rotate(b.rot + b.spin * d); fx.scale(1, Math.cos(d * b.flip) * .8 + .2 * Math.sign(Math.cos(d * b.flip) || 1));
+  fx.globalAlpha = clamp(d / .08) * clamp((5 - d) / .5);
+  const g = fx.createLinearGradient(-w / 2, 0, w / 2, 0); g.addColorStop(0, b.col[0]); g.addColorStop(.5, b.col[1]); g.addColorStop(1, b.col[0]);
+  fx.fillStyle = g; fx.fillRect(-w / 2, -h / 2, w, h);
+  fx.strokeStyle = "rgba(255,255,255,.55)"; fx.lineWidth = 3; fx.strokeRect(-w / 2 + 6, -h / 2 + 6, w - 12, h - 12);
+  fx.fillStyle = "rgba(255,255,255,.35)"; fx.beginPath(); fx.ellipse(-w * .18, 0, h * .3, h * .34, 0, 0, Math.PI * 2); fx.fill();
+  fx.fillStyle = "rgba(255,255,255,.9)"; fx.font = "900 " + h * .34 + "px Arial"; fx.textAlign = "right"; fx.textBaseline = "middle"; fx.fillText("R$ " + b.val, w / 2 - 12, 0);
+  fx.restore();
+}
+// papéis de conta caindo (cena da dificuldade)
+const PAPERS = [];
+CUES.filter((c) => c.kind === "papers").forEach((c) => {
+  for (let j = 0; j < 22; j++) {
+    const r = (k) => hash(9000 + j * 11 + k);
+    PAPERS.push({ t0: c.t + r(1) * c.dur * .8, x: 40 + r(2) * 1000, vy: 260 + r(3) * 200, rot: (r(4) - .5) * .8, sway: 30 + r(5) * 40, label: r(6) > .5 ? "VENCIDA" : "CONTA", end: c.t + c.dur });
+  }
+});
+function drawPaper(pp, t) {
+  const d = t - pp.t0; if (d < 0) return;
+  const y = -120 + pp.vy * d; if (y > ${H} + 100) return;
+  const fade = 1 - clamp((t - pp.end) / .3);
+  if (fade <= 0) return;
+  fx.save(); fx.translate(pp.x + Math.sin(d * 2 + pp.x) * pp.sway, y); fx.rotate(pp.rot + Math.sin(d * 1.5) * .3);
+  fx.globalAlpha = .85 * fade * clamp(d / .1);
+  fx.fillStyle = "#d9d9de"; fx.fillRect(-60, -80, 120, 160);
+  fx.fillStyle = "#9a9aa3"; for (let l = 0; l < 6; l++) fx.fillRect(-44, -50 + l * 16, l % 2 ? 60 : 88, 6);
+  fx.strokeStyle = "#8a2a2a"; fx.lineWidth = 4; fx.save(); fx.rotate(-.35); fx.strokeRect(-56, 30, 112, 34);
+  fx.fillStyle = "#8a2a2a"; fx.font = "900 22px Arial"; fx.textAlign = "center"; fx.textBaseline = "middle"; fx.fillText(pp.label, 0, 48); fx.restore();
+  fx.restore();
+}
 function drawCoin(x, y, s, a, rot) {
   const sx = Math.abs(Math.cos(rot)) * 0.85 + 0.15;
   fx.save(); fx.translate(x, y); fx.scale(sx, 1); fx.globalAlpha = a;
@@ -215,6 +277,18 @@ window.draw = (t) => {
     const a = (.25 + .5 * hash(i + 3)) * (.6 + .4 * Math.sin(t * 3 + i)) * (1 - gray * .7);
     fx.fillStyle = "rgba(255," + Math.floor(120 + 60 * hash(i + 8)) + ",30," + a + ")";
     fx.beginPath(); fx.arc(px, py, 2 + hash(i + 4) * 4, 0, Math.PI * 2); fx.fill();
+  }
+  if (document.body.classList.contains("organico")) {
+    // garoa fria na cena da dificuldade
+    if (gray > 0) {
+      fx.strokeStyle = "rgba(180,190,210," + (.35 * gray) + ")"; fx.lineWidth = 2;
+      for (let i = 0; i < 90; i++) {
+        const x = hash(i + 300) * ${W}, y = ((hash(i + 600) * ${H} + t * 1400) % ${H});
+        fx.beginPath(); fx.moveTo(x, y); fx.lineTo(x - 10, y + 46); fx.stroke();
+      }
+    }
+    PAPERS.forEach((pp) => drawPaper(pp, t));
+    BILLS.forEach((b) => drawBill(b, t));
   }
   COINS.forEach((c) => {
     const d = t - c.t0; if (d < 0 || d > 3.2) return;
@@ -273,7 +347,16 @@ window.draw = (t) => {
         c.style.transform = "translateX(" + (-220 * (1 - ease(q))) + "px) scale(" + (1.35 - .35 * back(q)) + ")";
       });
     }
+    if (s.id === "objecao") {
+      const wq = ease((t - s.start) / .5);
+      document.getElementById("wallet").style.transform = "rotate(" + (8 + 3 * Math.sin(t * 2)) + "deg) translateY(" + (-80 * (1 - wq)) + "px)";
+      document.getElementById("wallet").style.opacity = wq;
+    }
     if (s.id === "virada") {
+      document.querySelectorAll("#stack .bl").forEach((b, i) => {
+        const q = clamp((t - s.start - .2 - i * .12) / .2);
+        b.style.opacity = q; b.style.transform = "translateY(" + (-120 * (1 - ease(q))) + "px) rotate(" + (hash(i) - .5) * 6 + "deg)";
+      });
       up.style.strokeDasharray = UL; up.style.strokeDashoffset = UL * (1 - ease((t - s.start) / 1.4));
       document.getElementById("upArrow").style.opacity = clamp((t - s.start - 1.2) / .2);
     }

@@ -107,6 +107,33 @@ def shine():
     return out
 
 
+def rustle():
+    """Farfalhar de nota de papel."""
+    d = 0.22
+    t = t_axis(d)
+    x = lowpass(noise(d), 5000) - lowpass(noise(d), 1200)
+    flutter = 0.5 + 0.5 * np.sin(2 * np.pi * rng.uniform(25, 40) * t)
+    return x * flutter * env(d, 0.01, 0.08) * 0.5
+
+
+def cash_register():
+    """Caixa registradora: tilintar duplo + gaveta abrindo + moedas."""
+    d = 1.2
+    out = np.zeros(int(SR * d))
+    for at, f in [(0.0, 2600), (0.09, 3300)]:
+        b = bell(f, 0.9, 0.45)
+        i = int(SR * at)
+        out[i:i + len(b)] += b[: len(out) - i]
+    clank = (lowpass(noise(0.3), 2500) * env(0.3, 0.001, 0.05) * 1.4 + sweep(160, 70, 0.3) * env(0.3, 0.002, 0.1) * 0.6)
+    i = int(SR * 0.18)
+    out[i:i + len(clank)] += clank[: len(out) - i]
+    for k in range(6):
+        cn = coin()
+        i = int(SR * (0.3 + k * 0.06))
+        out[i:i + len(cn)] += cn[: len(out) - i] * 0.8
+    return out
+
+
 # ------------------------------------------------------------------ montagem
 def place(track, sig, at, pan=0.0, gain=1.0):
     i = int(SR * at)
@@ -143,6 +170,15 @@ def build_sfx(cues, duration):
             place(tr, bell(1320 * (1.122 ** c.get("k", 0)), 0.7, 0.35), t, pan=[-0.4, -0.15, 0.15, 0.4][c.get("k", 0) % 4])
         elif k == "shine":
             place(tr, shine(), t, gain=0.9)
+        elif k == "bills":
+            n, spread = c["n"], (0.5 if c["mode"] == "burst" else 2.4)
+            for j in range(max(4, n // 3)):
+                place(tr, rustle(), t + rng.uniform(0, spread), pan=rng.uniform(-0.7, 0.7), gain=0.8)
+        elif k == "cashreg":
+            place(tr, cash_register(), t, gain=1.0)
+        elif k == "papers":
+            for j in range(8):
+                place(tr, rustle(), t + j * c["dur"] / 8 + rng.uniform(0, 0.2), pan=rng.uniform(-0.6, 0.6), gain=0.35)
     return tr
 
 

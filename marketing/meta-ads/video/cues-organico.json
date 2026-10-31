@@ -1,0 +1,175 @@
+[
+ {
+  "t": 0.05,
+  "kind": "impact"
+ },
+ {
+  "t": 0.05,
+  "kind": "whoosh"
+ },
+ {
+  "t": 1.581,
+  "kind": "coins",
+  "n": 14,
+  "mode": "burst"
+ },
+ {
+  "t": 1.581,
+  "kind": "bills",
+  "n": 10,
+  "mode": "burst"
+ },
+ {
+  "t": 3.56,
+  "kind": "whoosh"
+ },
+ {
+  "t": 4.76,
+  "kind": "pop",
+  "k": 0
+ },
+ {
+  "t": 5.516,
+  "kind": "pop",
+  "k": 1
+ },
+ {
+  "t": 6.244,
+  "kind": "pop",
+  "k": 2
+ },
+ {
+  "t": 6.85,
+  "kind": "whoosh"
+ },
+ {
+  "t": 6.97,
+  "kind": "papers",
+  "dur": 3.4
+ },
+ {
+  "t": 7.07,
+  "kind": "thud"
+ },
+ {
+  "t": 8.01,
+  "kind": "thud"
+ },
+ {
+  "t": 8.97,
+  "kind": "thud"
+ },
+ {
+  "t": 9.55,
+  "kind": "riser",
+  "dur": 0.9
+ },
+ {
+  "t": 10.23,
+  "kind": "whoosh"
+ },
+ {
+  "t": 10.45,
+  "kind": "impact"
+ },
+ {
+  "t": 10.45,
+  "kind": "flash"
+ },
+ {
+  "t": 10.47,
+  "kind": "cashreg"
+ },
+ {
+  "t": 10.5,
+  "kind": "coins",
+  "n": 36,
+  "mode": "rain"
+ },
+ {
+  "t": 10.5,
+  "kind": "bills",
+  "n": 40,
+  "mode": "rain"
+ },
+ {
+  "t": 13.14,
+  "kind": "whoosh"
+ },
+ {
+  "t": 14.274,
+  "kind": "tap",
+  "k": 0
+ },
+ {
+  "t": 15.797,
+  "kind": "tap",
+  "k": 1
+ },
+ {
+  "t": 17.321,
+  "kind": "tap",
+  "k": 2
+ },
+ {
+  "t": 18.09,
+  "kind": "whoosh"
+ },
+ {
+  "t": 18.81,
+  "kind": "shine"
+ },
+ {
+  "t": 19.31,
+  "kind": "bills",
+  "n": 14,
+  "mode": "rain"
+ },
+ {
+  "t": 20.005,
+  "kind": "ding",
+  "k": 0
+ },
+ {
+  "t": 20.954,
+  "kind": "ding",
+  "k": 1
+ },
+ {
+  "t": 21.903,
+  "kind": "ding",
+  "k": 2
+ },
+ {
+  "t": 22.853,
+  "kind": "ding",
+  "k": 3
+ },
+ {
+  "t": 25.22,
+  "kind": "whoosh"
+ },
+ {
+  "t": 25.44,
+  "kind": "impact",
+  "soft": true
+ },
+ {
+  "t": 25.54,
+  "kind": "coins",
+  "n": 12,
+  "mode": "burst"
+ },
+ {
+  "t": 25.59,
+  "kind": "bills",
+  "n": 12,
+  "mode": "burst"
+ },
+ {
+  "t": 26.24,
+  "kind": "bills",
+  "n": 16,
+  "mode": "rain"
+ }
+]
