@@ -85,7 +85,7 @@ describe("resultado personalizado", () => {
     expect(c.offer.referencePriceCents).toBeNull();
     expect(c.salesPage.blocks.some((b) => b.type === "testimonials")).toBe(false);
     expect(c.offer.priceCents).toBe(1990);
-    c.offer.checkoutUrl = "https://pay.exemplo.com/rota";
-    expect(publishIssues(c)).toEqual([]);
+    expect(c.offer.checkoutUrl).toBe("https://pay.kiwify.com.br/7fyz1pO");
+    expect(publishIssues(c)).toEqual([]); // publicável sem ajustes
   });
 });

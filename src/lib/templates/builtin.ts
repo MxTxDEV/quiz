@@ -520,6 +520,7 @@ function rotaInvisivel(): CampaignConfig {
     priceCents: 1990,
     paymentTerms: "Pagamento único",
     buttonLabel: "Quero acessar o Rota Invisível",
+    checkoutUrl: "https://pay.kiwify.com.br/7fyz1pO",
     description: "Um guia prático com diferentes possibilidades de construir uma renda extra pela internet e fora dela.",
     benefits: [
       "O universo da renda extra",
