@@ -329,6 +329,8 @@ export type Brand = z.infer<typeof brandSchema>;
 export const salesPageSchema = z.object({
   theme: themeSchema.default(themeSchema.parse({})),
   brand: brandSchema.default(brandSchema.parse({})),
+  /** objetos flutuantes, fundo líquido e movimento ao rolar (respeita "reduzir movimento" do aparelho) */
+  effects: z.boolean().default(true),
   blocks: z.array(blockSchema).max(80).default([]),
 });
 export type SalesPage = z.infer<typeof salesPageSchema>;

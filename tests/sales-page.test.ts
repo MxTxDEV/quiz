@@ -89,3 +89,21 @@ describe("resultado personalizado", () => {
     expect(publishIssues(c)).toEqual([]); // publicável sem ajustes
   });
 });
+
+describe("página resumida com movimento", () => {
+  it("modelo resumido: sem blocos redundantes e com efeitos ligados", () => {
+    const c = rota();
+    const types = c.salesPage.blocks.filter((b) => !b.group || b.group === "hero").map((b) => b.type);
+    expect(c.salesPage.effects).toBe(true);
+    expect(types.filter((t) => t === "benefits")).toHaveLength(0);
+    expect(types).not.toContain("guarantee");
+    const faq = c.salesPage.blocks.find((b) => b.type === "faq") as Extract<Block, { type: "faq" }>;
+    expect(faq.items.length).toBeLessThanOrEqual(5);
+  });
+  it("campanhas antigas ganham os efeitos sem precisar republicar", async () => {
+    const { parseConfig } = await import("@/lib/domain/config");
+    const old = rota() as unknown as { salesPage: Record<string, unknown> };
+    delete old.salesPage.effects;
+    expect(parseConfig(old).salesPage.effects).toBe(true);
+  });
+});

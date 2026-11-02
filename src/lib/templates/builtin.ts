@@ -546,6 +546,7 @@ function rotaInvisivel(): CampaignConfig {
   c.salesPage = {
     theme: { ...dark },
     brand: { name: "Rota Invisível", tagline: "Encontre caminhos para ganhar dinheiro que você ainda não enxergou.", logoUrl: "" },
+    effects: true,
     blocks: [
       // 1 — Hero (variações por perfil; sem perfil = versão geral)
       b("hero", {
@@ -614,11 +615,11 @@ function rotaInvisivel(): CampaignConfig {
         fallbackText: "Com base nas suas respostas, o primeiro passo é conhecer as possibilidades e escolher uma que faça sentido para a sua realidade.",
       }),
 
-      // 3 — Problema
+      // 3 — Problema (curto)
       b("text", {
         emphasis: "statement",
-        title: "O problema não é necessariamente a falta de oportunidades.",
-        body: "Talvez você já tenha pesquisado maneiras de ganhar dinheiro, começado alguma coisa ou pensado em várias possibilidades.\n\nMas, sem saber qual caminho escolher, é fácil perder tempo, abandonar ideias e continuar exatamente no mesmo lugar.\n\nExistem diferentes formas de construir uma renda adicional. O primeiro passo é conhecer as possibilidades, entender o que cada uma exige e escolher uma que faça sentido para sua realidade.",
+        title: "O problema não é falta de oportunidade. É falta de direção.",
+        body: "Sem saber qual caminho escolher, é fácil perder tempo, abandonar ideias e continuar no mesmo lugar. O primeiro passo é conhecer as opções e escolher uma que caiba na sua realidade.",
       }),
 
       // 4 — Solução
@@ -627,73 +628,45 @@ function rotaInvisivel(): CampaignConfig {
         showMockup: true,
         eyebrow: "A solução",
         title: "Conheça o ROTA INVISÍVEL.",
-        body: "Um mapa prático para encontrar oportunidades e começar a construir sua renda extra.\n\nUm guia de execução, organizado para você entender as opções e agir — não uma promessa de enriquecimento.",
-        bullets: ["Guia digital", "Conteúdo organizado", "Renda pela internet", "Renda fora da internet", "Alternativas de baixo investimento", "Estratégias para começar"],
+        body: "Um mapa prático para encontrar oportunidades e começar com o que você já tem — não uma promessa de enriquecimento.",
+        bullets: ["Renda pela internet e fora dela", "Opções de baixo investimento", "Como conseguir os primeiros clientes", "Plano de ação de 30 dias"],
       }),
 
-      // 4b — Destaques por perfil
-      b("benefits", { group: "destaques", useOffer: false, title: "O que o guia ajuda você a avaliar", items: ["Comparação entre modelos de renda", "Diferentes possibilidades, pela internet e fora dela", "Critérios para escolher oportunidades"] }),
-      b("benefits", { group: "destaques", profileIds: P.v, useOffer: false, title: "Para o seu perfil, o guia destaca", items: ["Venda sob encomenda", "Revenda sem estoque", "Comercialização de produtos", "Estratégias para conseguir compradores"] }),
-      b("benefits", { group: "destaques", profileIds: P.s, useOffer: false, title: "Para o seu perfil, o guia destaca", items: ["Monetização de habilidades", "Serviços digitais", "Serviços locais", "Captação de clientes"] }),
-      b("benefits", { group: "destaques", profileIds: P.c, useOffer: false, title: "Para o seu perfil, o guia destaca", items: ["Criação de conteúdo", "Formas de monetização", "Produtos digitais", "Divulgação e audiência"] }),
-      b("benefits", { group: "destaques", profileIds: P.e, useOffer: false, title: "Para o seu perfil, o guia destaca", items: ["Comparação entre modelos de renda", "Diferentes possibilidades", "Critérios para escolher oportunidades"] }),
-
-      // 5 — Capítulos
+      // 5 — Capítulos (resumido)
       b("content", {
         numbered: true,
         eyebrow: "O que você vai encontrar",
         title: "Do panorama ao plano de ação, em 7 capítulos.",
         items: [
-          { title: "O universo da renda extra", description: "Entenda os diferentes modelos de geração de renda e como avaliar oportunidades." },
-          { title: "Dinheiro pela internet", description: "Conheça possibilidades de monetização, vendas, afiliados e serviços digitais." },
-          { title: "Oportunidades fora da internet", description: "Explore pequenos negócios, revendas, serviços e oportunidades locais." },
-          { title: "Começando com pouco", description: "Descubra alternativas que exigem baixo investimento inicial." },
-          { title: "Como encontrar clientes", description: "Conheça estratégias para divulgar serviços, apresentar ofertas e conquistar compradores." },
-          { title: "Ferramentas para começar", description: "Conheça recursos digitais gratuitos e ferramentas úteis." },
-          { title: "Plano de execução", description: "Organize suas ações e coloque uma oportunidade em prática durante os próximos 30 dias." },
+          { title: "O universo da renda extra", description: "Os modelos de renda e como avaliá-los." },
+          { title: "Dinheiro pela internet", description: "Serviços, vendas, afiliados e produtos digitais." },
+          { title: "Oportunidades fora da internet", description: "Revendas, serviços e negócios locais." },
+          { title: "Começando com pouco", description: "Alternativas de baixo investimento inicial." },
+          { title: "Como encontrar clientes", description: "Divulgar, apresentar ofertas e vender." },
+          { title: "Ferramentas para começar", description: "Recursos gratuitos que ajudam desde o início." },
+          { title: "Plano de execução", description: "Uma oportunidade em prática em 30 dias." },
         ],
       }),
 
       // 6 — Bônus (exibe apenas os bônus cadastrados na oferta)
       b("bonuses", { tone: "surface", title: "E ainda tem mais..." }),
 
-      // 7 — Para quem é
-      b("benefits", {
-        useOffer: false,
-        title: "O ROTA INVISÍVEL foi criado para quem...",
-        items: [
-          "Quer complementar o salário",
-          "Tem pouco dinheiro para começar",
-          "Possui pouco tempo disponível",
-          "Já tentou encontrar uma renda extra, mas não conseguiu",
-          "Quer conhecer novas possibilidades",
-          "Precisa de orientação para escolher por onde começar",
-        ],
-      }),
-
-      // 8 — Oferta
+      // 7 — Oferta
       b("offerCard", { title: "Seu acesso ao ROTA INVISÍVEL", buttonLabel: "Quero acessar o Rota Invisível", note: "Pagamento processado com segurança pela plataforma de checkout." }),
 
-      // 9 — Garantia (só aparece com a política configurada na oferta)
-      b("guarantee", { title: "Sua compra com segurança", text: "" }),
-
-      // 10 — FAQ
+      // 8 — FAQ (essencial)
       b("faq", {
         tone: "surface",
         title: "Perguntas frequentes",
         items: [
           { question: "Preciso ter experiência para começar?", answer: "Não. O guia parte do básico e explica o que cada caminho exige, para você avaliar o que faz sentido para a sua realidade." },
-          { question: "Preciso investir muito dinheiro?", answer: "Não. Há um capítulo dedicado a alternativas de baixo investimento inicial. Algumas opções exigem algum investimento — o guia deixa isso claro para você decidir." },
-          { question: "Preciso trabalhar exclusivamente pela internet?", answer: "Não. O guia apresenta possibilidades pela internet e também fora dela, como revendas, serviços e oportunidades locais." },
-          { question: "Quanto tempo preciso dedicar?", answer: "Depende do caminho que você escolher. O conteúdo inclui opções que podem ser executadas em períodos curtos e um plano para organizar suas ações." },
-          { question: "Vou ganhar dinheiro imediatamente?", answer: "Não há garantia de resultados financeiros. O guia apresenta possibilidades e um plano de execução; os resultados dependem da sua dedicação, do seu contexto e da sua aplicação." },
-          { question: "Como receberei o material?", answer: "Após a confirmação do pagamento, a plataforma de checkout envia as instruções de acesso para o e-mail informado na compra." },
-          { question: "O produto é digital?", answer: "Sim. É um guia digital, sem envio físico." },
-          { question: "Posso acessar o material depois da compra?", answer: "Sim. O acesso fica disponível conforme as condições da plataforma de entrega informadas na compra." },
+          { question: "Preciso investir muito dinheiro?", answer: "Não. Há um capítulo dedicado a alternativas de baixo investimento inicial. Quando uma opção exige investimento, o guia deixa isso claro." },
+          { question: "Vou ganhar dinheiro imediatamente?", answer: "Não há garantia de resultados financeiros. O guia apresenta possibilidades e um plano de execução; os resultados dependem da sua dedicação e do seu contexto." },
+          { question: "Como receberei o material?", answer: "É um guia digital. Após a confirmação do pagamento, a plataforma de checkout envia as instruções de acesso para o e-mail informado na compra." },
         ],
       }),
 
-      // 11 — CTA final
+      // 9 — CTA final
       b("ctaSection", {
         headline: "Você pode continuar procurando respostas ou começar a explorar novos caminhos.",
         subheadline: "Conheça as possibilidades, escolha uma direção e dê o primeiro passo.",

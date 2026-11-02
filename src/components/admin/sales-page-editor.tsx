@@ -21,6 +21,10 @@ import { GroupEditor, knownAttributes, newCondition } from "@/components/admin/r
 import type { Product } from "@/lib/db/schema";
 import { centsToInput, cn, parseMoneyToCents, uid } from "@/lib/utils";
 import { imageUrlProblem } from "@/lib/domain/images";
+import { builtinTemplates } from "@/lib/templates/builtin";
+
+/** modelos que trazem página de vendas pronta (para "aplicar versão do modelo") */
+const pageTemplates = builtinTemplates.filter((t) => t.config.salesPage.blocks.length > 0);
 
 const imageError = (url: string, checkoutUrl?: string) => {
   const p = imageUrlProblem(url, checkoutUrl);
@@ -94,6 +98,29 @@ export function SalesPageEditor({
                     </div>
                   )}
                 />
+                {canEdit && pageTemplates.length > 0 && (
+                  <Dropdown>
+                    <DropdownTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full"><RefreshCcw /> Aplicar versão de um modelo</Button>
+                    </DropdownTrigger>
+                    <DropdownContent>
+                      {pageTemplates.map((t) => (
+                        <DropdownItem
+                          key={t.key}
+                          onSelect={() => {
+                            const n = salesPage.blocks.length;
+                            if (!window.confirm(`Substituir os ${n} blocos atuais pela página do modelo "${t.name}"?\n\nA oferta, o checkout e a aparência não mudam. Nada vai ao ar até você salvar e publicar.`)) return;
+                            const blocks = structuredClone(t.config.salesPage.blocks);
+                            s.setValue({ offer, salesPage: { ...salesPage, effects: true, blocks } });
+                            setSelected(blocks[0]?.id ?? null);
+                          }}
+                        >
+                          {t.name}
+                        </DropdownItem>
+                      ))}
+                    </DropdownContent>
+                  </Dropdown>
+                )}
                 {canEdit && (
                   <Dropdown>
                     <DropdownTrigger asChild>
@@ -152,6 +179,17 @@ export function SalesPageEditor({
               </CardContent>
             </Card>
             <Card>
+              <CardHeader><CardTitle>Movimento</CardTitle></CardHeader>
+              <CardContent>
+                <SwitchRow
+                  label="Efeitos de movimento"
+                  description="Fundo líquido, objetos flutuantes e seções que aparecem ao rolar. Leve no celular e desligado automaticamente para quem ativou “reduzir movimento” no aparelho."
+                  checked={salesPage.effects}
+                  onCheckedChange={(v) => s.setValue({ offer, salesPage: { ...salesPage, effects: v } })}
+                />
+              </CardContent>
+            </Card>
+            <Card>
               <CardHeader><CardTitle>Aparência da página de vendas</CardTitle></CardHeader>
               <CardContent>
                 <ThemeEditor value={salesPage.theme} onChange={(theme) => s.setValue({ offer, salesPage: { ...salesPage, theme } })} />
@@ -177,7 +215,7 @@ export function SalesPageEditor({
           </div>
           <div className={cn("mx-auto overflow-y-auto border bg-white shadow-sm", device === "mobile" ? "h-[680px] w-[360px] rounded-[28px] border-[6px] border-zinc-800" : "h-[680px] w-full rounded-lg")}>
             <div style={device === "desktop" ? { zoom: 0.62 } : undefined}>
-              <SalesPageView page={salesPage} offer={offer} ctx={ctx} minHeight="100%" />
+              <SalesPageView page={salesPage} offer={offer} ctx={ctx} minHeight="100%" motion="static" />
             </div>
           </div>
         </div>

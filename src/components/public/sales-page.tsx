@@ -5,6 +5,8 @@ import type { Answers, Attributes } from "@/lib/engine/answers";
 import { evaluateGroup } from "@/lib/engine/rules";
 import { themeVars } from "./theme";
 import { CoverImage } from "./cover-image";
+import { LiquidOrb, LiquidWave, SalesBackdrop } from "./sales-decor";
+import { SalesFx } from "./sales-fx";
 import { usableImageUrl } from "@/lib/domain/images";
 
 /**
@@ -130,15 +132,16 @@ function BuyButton({ href, label, note, purchase = true, wide = false }: { href:
       <a
         href={href}
         data-purchase={purchase ? "" : undefined}
-        className={`group inline-flex min-h-14 items-center justify-center gap-2 rounded-[var(--q-radius)] px-5 py-4 text-center text-[0.86em] font-extrabold uppercase tracking-[0.02em] sm:px-7 sm:text-[0.95em] sm:tracking-wide transition duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 ${wide ? "w-full" : "w-full sm:w-auto"}`}
+        className={`fx-liquid-btn group relative isolate overflow-hidden inline-flex min-h-14 items-center justify-center gap-2 rounded-[var(--q-radius)] px-5 py-4 text-center text-[0.86em] font-extrabold uppercase tracking-[0.02em] sm:px-7 sm:text-[0.95em] sm:tracking-wide transition duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 ${wide ? "w-full" : "w-full sm:w-auto"}`}
         style={{
           background: "var(--q-accent)",
           color: "var(--q-accent-text)",
           boxShadow: "0 10px 30px -10px color-mix(in srgb, var(--q-accent) 70%, transparent)",
         }}
       >
-        {label}
-        <span aria-hidden className="transition-transform group-hover:translate-x-0.5">→</span>
+        <span aria-hidden className="fx-liquid" />
+        <span className="relative">{label}</span>
+        <span aria-hidden className="relative transition-transform group-hover:translate-x-0.5">→</span>
       </a>
       {note && <p className="flex items-center justify-center gap-1.5 text-[0.78em] sm:justify-start" style={muted}>{note}</p>}
     </div>
@@ -213,17 +216,18 @@ function HeroVisual({ offer, brand, block }: { offer: Offer; brand: Brand; block
   return (
     <div className="relative mx-auto flex h-[340px] w-full max-w-[380px] items-center justify-center sm:h-[420px]">
       <div className="absolute inset-[12%] rounded-full blur-3xl" style={{ background: "color-mix(in srgb, var(--q-accent) 22%, transparent)" }} />
+      <LiquidOrb />
       {chips.map(({ icon: Icon, className }, i) => (
-        <div
-          key={i}
-          className={`absolute ${className} grid size-11 place-items-center rounded-full border backdrop-blur`}
-          style={{ borderColor: hairline, background: "color-mix(in srgb, var(--q-surface) 80%, transparent)" }}
-          aria-hidden
-        >
-          <Icon className="size-[18px]" style={accent} />
+        <div key={i} className={`fx-chip absolute ${className}`} style={{ "--spd": [0.35, 0.6, 0.5, 0.8][i], "--dur": `${6 + i * 1.5}s` } as React.CSSProperties} aria-hidden>
+          <div
+            className="fx-chip-inner grid size-11 place-items-center rounded-full border backdrop-blur"
+            style={{ borderColor: hairline, background: "color-mix(in srgb, var(--q-surface) 80%, transparent)" }}
+          >
+            <Icon className="size-[18px]" style={accent} />
+          </div>
         </div>
       ))}
-      <div className="relative">
+      <div className="fx-book relative">
         <BookMockup title={title || "Guia"} label={brand.tagline ? "Guia prático" : undefined} imageUrl={usableImageUrl(block.imageUrl, offer.checkoutUrl) || offer.coverImageUrl} checkoutUrl={offer.checkoutUrl} />
       </div>
     </div>
@@ -673,19 +677,40 @@ function renderBlock(b: Block, env: Env): React.ReactNode {
   }
 }
 
-const toneStyle = (tone: Block["tone"]): React.CSSProperties =>
+const toneStyle = (tone: Block["tone"], fx = false): React.CSSProperties =>
   tone === "surface"
-    ? { background: "var(--q-surface)" }
+    ? { background: fx ? "color-mix(in srgb, var(--q-surface) 72%, transparent)" : "var(--q-surface)" }
     : tone === "contrast"
       ? { background: "var(--q-text)", color: "var(--q-bg)", "--q-surface": "color-mix(in srgb, var(--q-bg) 6%, var(--q-text))", "--q-muted": "color-mix(in srgb, var(--q-bg) 65%, var(--q-text))", "--q-text": "var(--q-bg)" } as React.CSSProperties
       : {};
 
-export function SalesPageView({ page, offer, ctx, minHeight = "100dvh" }: { page: SalesPage; offer: Offer; ctx: SalesContext; minHeight?: string }) {
+export function SalesPageView({
+  page,
+  offer,
+  ctx,
+  minHeight = "100dvh",
+  motion = "full",
+}: {
+  page: SalesPage;
+  offer: Offer;
+  ctx: SalesContext;
+  minHeight?: string;
+  /** full = página pública (efeitos ligados ao scroll); static = pré-visualização dentro do painel */
+  motion?: "full" | "static";
+}) {
   const blocks = visibleBlocks(page.blocks, ctx.profile?.id ?? null);
   const env: Env = { page, offer, ctx, hasOfferCard: blocks.some((b) => b.type === "offerCard") };
   const showBrandBar = (page.brand.name || page.brand.logoUrl) && blocks[0]?.type === "hero";
+  const fx = page.effects;
+  const rootId = "fos-sales";
   return (
-    <div style={{ ...themeVars(page.theme), minHeight }} className="overflow-x-hidden antialiased">
+    <div
+      id={motion === "full" ? rootId : undefined}
+      style={{ ...themeVars(page.theme), minHeight }}
+      className={`relative isolate overflow-x-hidden antialiased ${fx ? `fx-page ${motion === "static" ? "fx-static" : ""}` : ""}`}
+    >
+      {fx && <SalesBackdrop />}
+      {fx && motion === "full" && <SalesFx rootId={rootId} />}
       {showBrandBar && (
         <header className="mx-auto flex max-w-6xl items-center justify-between px-5 pt-6 sm:px-8">
           <BrandMark brand={page.brand} />
@@ -703,9 +728,10 @@ export function SalesPageView({ page, offer, ctx, minHeight = "100dvh" }: { page
             key={b.id}
             data-block={b.type}
             className={`reveal ${b.type === "footer" ? "pb-10 pt-4" : first ? "pb-16 pt-10 sm:pb-24 sm:pt-14" : "py-[calc(4rem*var(--q-space))] sm:py-[calc(5.5rem*var(--q-space))]"}`}
-            style={toneStyle(b.tone)}
+            style={toneStyle(b.tone, fx)}
           >
             {node}
+            {fx && first && b.type === "hero" && <LiquidWave />}
           </section>
         );
       })}
