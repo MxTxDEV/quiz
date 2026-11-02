@@ -585,21 +585,41 @@ function renderBlock(b: Block, env: Env): React.ReactNode {
               </div>
               <div>
                 <p className="text-[0.72em] font-bold uppercase tracking-[0.18em]" style={accent}>{b.title}</p>
-                <ul className="mt-5 space-y-3">
+                <ul className="mt-5 space-y-2.5">
                   {items.map((it, i) => (
-                    <li key={i} className="flex items-start gap-3 text-[0.98em]">
-                      <Check className="mt-0.5 size-4 shrink-0" style={accent} strokeWidth={3} />
-                      <span>{it}</span>
+                    <li
+                      key={i}
+                      className="flex items-center gap-3 rounded-[var(--q-radius)] border px-3 py-2.5 text-[0.95em]"
+                      style={{ borderColor: hairline, background: "color-mix(in srgb, var(--q-bg) 35%, transparent)" }}
+                    >
+                      <Check className="size-4 shrink-0" style={accent} strokeWidth={3} />
+                      <span className="flex-1">{it}</span>
+                      <span
+                        className="shrink-0 rounded-full px-2 py-0.5 text-[0.66em] font-extrabold uppercase tracking-[0.08em]"
+                        style={i === 0 ? { background: "var(--q-accent)", color: "var(--q-accent-text)" } : { border: `1px solid ${hairline}`, ...accent }}
+                      >
+                        {i === 0 ? "Principal" : "Incluso"}
+                      </span>
                     </li>
                   ))}
                 </ul>
                 <div className="mt-7 border-t pt-6" style={{ borderColor: hairline }}>
-                  {hasRef && (
+                  {hasRef ? (
                     <p className="text-[0.9em]" style={muted}>
                       De <s>{money(offer.referencePriceCents!, offer.currency)}</s> por
                     </p>
+                  ) : (
+                    items.length > 1 && <p className="text-[0.9em] font-semibold" style={muted}>Tudo isso, {items.length} materiais, por</p>
                   )}
                   <p className="text-[3em] font-black leading-none tracking-[-0.04em]">{money(offer.priceCents, offer.currency)}</p>
+                  {items.length > 1 && offer.priceCents > 0 && (
+                    <p
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.78em] font-bold"
+                      style={{ background: "color-mix(in srgb, var(--q-accent) 16%, transparent)", ...accent }}
+                    >
+                      Equivale a {money(Math.round(offer.priceCents / items.length), offer.currency)} por material
+                    </p>
+                  )}
                   {offer.paymentTerms && <p className="mt-2 text-[0.9em] font-semibold" style={muted}>{offer.paymentTerms}</p>}
                   {hasRef && <p className="mt-1 text-[0.72em]" style={muted}>Preço de referência: {offer.referencePriceNote}</p>}
                 </div>
