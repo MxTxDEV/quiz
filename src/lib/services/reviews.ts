@@ -21,8 +21,8 @@ const reviewInputSchema = z.object({
   text: z.string().trim().min(20, "Conte um pouco mais (mínimo de 20 caracteres)").max(800, "Use no máximo 800 caracteres"),
   email: z.string().trim().toLowerCase().email("Informe o e-mail usado na compra").max(200),
   consent: z.literal(true, { message: "É preciso autorizar a exibição da avaliação" }),
-  /** campo invisível anti-robô: humanos deixam vazio */
-  website: z.string().max(0).optional().default(""),
+  /** milissegundos entre abrir o formulário e enviar (robôs enviam instantaneamente) */
+  elapsedMs: z.coerce.number().optional(),
 });
 export type ReviewInput = z.input<typeof reviewInputSchema>;
 
@@ -45,6 +45,7 @@ async function isBuyer(campaignId: string, email: string) {
 
 export async function submitReview(slug: string, input: ReviewInput, ip: string) {
   const data = reviewInputSchema.parse(input);
+  if (data.elapsedMs != null && data.elapsedMs < 2500) throw new PublicFlowError("Envio muito rápido. Confira os dados e tente de novo.", 429);
   const [campaign] = await db.select({ id: campaigns.id, status: campaigns.status }).from(campaigns).where(eq(campaigns.slug, slug)).limit(1);
   if (!campaign || campaign.status !== "published") throw new PublicFlowError("Página de avaliação não encontrada.", 404);
 

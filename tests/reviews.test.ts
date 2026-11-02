@@ -30,7 +30,7 @@ describe("avaliações de compradores", () => {
     await expect(submitReview("rota", { ...base, consent: false as never }, "1.1.1.1")).rejects.toThrow(/autorizar/);
     await expect(submitReview("rota", { ...base, text: "bom" }, "1.1.1.1")).rejects.toThrow(/mínimo/);
     await expect(submitReview("nao-existe", base, "1.1.1.1")).rejects.toThrow(/não encontrada/);
-    await expect(submitReview("rota", { ...base, website: "spam.com" }, "1.1.1.1")).rejects.toThrow();
+    await expect(submitReview("rota", { ...base, elapsedMs: 300 }, "1.1.1.1")).rejects.toThrow(/rápido/);
   });
 
   it("pendente até aprovar; compra verificada pelo e-mail da venda; contador real", async () => {

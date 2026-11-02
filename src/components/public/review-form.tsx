@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Star } from "lucide-react";
 
 const labels = ["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"];
@@ -8,7 +8,8 @@ const labels = ["", "Ruim", "Regular", "Bom", "Muito bom", "Excelente"];
 export function ReviewForm({ slug, consentText }: { slug: string; consentText: string }) {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
-  const [form, setForm] = useState({ name: "", city: "", text: "", email: "", consent: false, website: "" });
+  const [form, setForm] = useState({ name: "", city: "", text: "", email: "", consent: false });
+  const openedAt = useRef(Date.now());
   const [state, setState] = useState<{ status: "idle" | "sending" | "done" | "error"; message?: string; verified?: boolean }>({ status: "idle" });
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -17,7 +18,7 @@ export function ReviewForm({ slug, consentText }: { slug: string; consentText: s
     if (!rating) return setState({ status: "error", message: "Escolha de 1 a 5 estrelas." });
     setState({ status: "sending" });
     try {
-      const res = await fetch("/api/public/review", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, rating, ...form }) });
+      const res = await fetch("/api/public/review", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, rating, ...form, elapsedMs: Date.now() - openedAt.current }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return setState({ status: "error", message: data.error || "Não foi possível enviar. Tente de novo." });
       setState({ status: "done", verified: !!data.verified });
@@ -80,7 +81,6 @@ export function ReviewForm({ slug, consentText }: { slug: string; consentText: s
         <input required type="email" maxLength={200} value={form.email} onChange={(e) => set("email", e.target.value)} className={field} style={fieldStyle} autoComplete="email" inputMode="email" />
         <span className="mt-1 block text-[0.75em]" style={{ color: "var(--q-muted)" }}>Só para confirmar a compra. Nunca é exibido.</span>
       </label>
-      <input tabIndex={-1} autoComplete="off" aria-hidden value={form.website} onChange={(e) => set("website", e.target.value)} className="absolute -left-[9999px] h-0 w-0 opacity-0" name="website" />
       <label className="flex items-start gap-3 text-[0.85em] leading-relaxed">
         <input type="checkbox" required checked={form.consent} onChange={(e) => set("consent", e.target.checked)} className="mt-1 size-4 shrink-0 accent-[var(--q-accent)]" />
         <span style={{ color: "var(--q-muted)" }}>{consentText}</span>
