@@ -93,6 +93,7 @@ export const blockLabels: Record<BlockType, string> = {
   content: "Apresentação do conteúdo / capítulos",
   bonuses: "Bônus",
   testimonials: "Depoimentos",
+  reviews: "Avaliações de compradores (automático)",
   faq: "Perguntas frequentes",
   offerCard: "Card da oferta",
   price: "Preço",

@@ -413,6 +413,25 @@ function BlockEditor({
             <Notice>Os bônus exibidos são os cadastrados na aba Oferta.</Notice>
           </>
         )}
+        {b.type === "reviews" && (
+          <>
+            <Field label="Título"><Input value={b.title} onChange={(e) => set({ title: e.target.value })} /></Field>
+            <Field label="Subtítulo (opcional)"><Input value={b.subtitle} onChange={(e) => set({ subtitle: e.target.value })} /></Field>
+            <Field label="Quantas avaliações mostrar">
+              <Input type="number" min={1} max={12} value={b.maxItems} onChange={(e) => set({ maxItems: Math.max(1, Math.min(12, Number(e.target.value) || 1)) })} />
+            </Field>
+            <SwitchRow label="Mostrar total de compradores" description="Usa o número real de vendas confirmadas pelo checkout." checked={b.showBuyerCount} onCheckedChange={(v) => set({ showBuyerCount: v })} />
+            {b.showBuyerCount && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Mostrar a partir de" hint="Abaixo disso o contador fica oculto.">
+                  <Input type="number" min={1} value={b.minBuyers} onChange={(e) => set({ minBuyers: Math.max(1, Number(e.target.value) || 1) })} />
+                </Field>
+                <Field label="Texto do contador"><Input value={b.buyerLabel} onChange={(e) => set({ buyerLabel: e.target.value })} /></Field>
+              </div>
+            )}
+            <Notice>As avaliações vêm da aba “Avaliações” da campanha: só aparecem as que você aprovar. O bloco fica oculto enquanto não houver nenhuma.</Notice>
+          </>
+        )}
         {b.type === "testimonials" && (
           <>
             <Field label="Título"><Input value={b.title} onChange={(e) => set({ title: e.target.value })} /></Field>

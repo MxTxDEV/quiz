@@ -12,5 +12,5 @@ export async function resetDb() {
     await conn.end();
     migrated = true;
   }
-  await sql`truncate table events, leads, purchases, ad_spend, visitor_sessions, webhook_endpoints, campaigns, templates, products, settings, error_logs, auth_sessions, users restart identity cascade`;
+  await sql`truncate table reviews, events, leads, purchases, ad_spend, visitor_sessions, webhook_endpoints, campaigns, templates, products, settings, error_logs, auth_sessions, users restart identity cascade`;
 }

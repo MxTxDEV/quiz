@@ -1,5 +1,5 @@
 import type React from "react";
-import { BadgeCheck, Briefcase, Check, ChevronDown, Gift, Laptop, Lock, ShieldCheck, Store, TrendingUp, Wallet } from "lucide-react";
+import { BadgeCheck, Briefcase, Check, ChevronDown, Gift, Laptop, Lock, ShieldCheck, Star, Store, TrendingUp, Users, Wallet } from "lucide-react";
 import type { Block, Brand, Offer, Quiz, SalesPage } from "@/lib/domain/config";
 import type { Answers, Attributes } from "@/lib/engine/answers";
 import { evaluateGroup } from "@/lib/engine/rules";
@@ -8,6 +8,7 @@ import { CoverImage } from "./cover-image";
 import { LiquidOrb, LiquidWave, SalesBackdrop } from "./sales-decor";
 import { SalesFx } from "./sales-fx";
 import { usableImageUrl } from "@/lib/domain/images";
+import type { SocialProof } from "@/lib/services/reviews";
 
 /**
  * Renderizador da página de vendas. Componente sem estado (Server e Client Components):
@@ -26,6 +27,8 @@ export type SalesContext = {
   /** respostas reais do visitante; null = sem sessão; undefined = pré-visualização sem respostas */
   personal?: PersonalData | null;
   legal?: Legal;
+  /** avaliações aprovadas e total real de compradores; undefined = pré-visualização do painel */
+  social?: SocialProof;
 };
 
 function money(cents: number, currency: string) {
@@ -266,6 +269,16 @@ type Env = { page: SalesPage; offer: Offer; ctx: SalesContext; hasOfferCard: boo
 
 function ctaHref(action: "offer" | "checkout", blockId: string, env: Env) {
   return action === "offer" && env.hasOfferCard ? "#oferta" : env.ctx.checkoutHref(blockId);
+}
+
+function Stars({ value }: { value: number }) {
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`${value} de 5 estrelas`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} className="size-4" strokeWidth={0} style={{ fill: i <= Math.round(value) ? "#ffb020" : "color-mix(in srgb, var(--q-text) 18%, transparent)" }} />
+      ))}
+    </span>
+  );
 }
 
 function Container({ children, size = "lg" }: { children: React.ReactNode; size?: "sm" | "md" | "lg" }) {
@@ -516,6 +529,70 @@ function renderBlock(b: Block, env: Env): React.ReactNode {
           </div>
         </Container>
       );
+    case "reviews": {
+      const sp = ctx.social;
+      if (!sp)
+        return (
+          <Container size="md">
+            <div className="rounded-[var(--q-radius)] border border-dashed p-6 text-center text-[0.9em]" style={{ borderColor: hairline, ...muted }}>
+              <b style={{ color: "var(--q-text)" }}>{b.title}</b>
+              <p className="mt-1">Mostra automaticamente as avaliações de compradores aprovadas na aba “Avaliações” e o total real de vendas confirmadas. Fica oculto enquanto não houver avaliações aprovadas.</p>
+            </div>
+          </Container>
+        );
+      const items = sp.reviews.slice(0, b.maxItems);
+      const showBuyers = b.showBuyerCount && sp.buyers >= b.minBuyers;
+      if (items.length === 0 && !showBuyers) return null;
+      return (
+        <Container>
+          <div className="text-center">
+            <H2 center>{b.title}</H2>
+            {b.subtitle && <p className="mx-auto mt-3 max-w-xl" style={muted}>{b.subtitle}</p>}
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+              {sp.average != null && sp.reviewCount > 0 && (
+                <span className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[0.85em] font-bold" style={{ borderColor: hairline }}>
+                  <Stars value={sp.average} />
+                  {sp.average.toLocaleString("pt-BR", { minimumFractionDigits: 1 })} de 5 · {sp.reviewCount} {sp.reviewCount === 1 ? "avaliação" : "avaliações"}
+                </span>
+              )}
+              {showBuyers && (
+                <span className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[0.85em] font-bold" style={{ background: "color-mix(in srgb, var(--q-accent) 16%, transparent)", ...accent }}>
+                  <Users className="size-4" /> {sp.buyers.toLocaleString("pt-BR")} {b.buyerLabel}
+                </span>
+              )}
+            </div>
+          </div>
+          {items.length > 0 && (
+            <div className="-mx-5 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-3 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3 [scrollbar-width:none]">
+              {items.map((r) => (
+                <figure
+                  key={r.id}
+                  className="flex w-[82%] shrink-0 snap-center flex-col rounded-[var(--q-radius)] border p-5 sm:w-auto"
+                  style={{ borderColor: hairline, background: "color-mix(in srgb, var(--q-surface) 85%, transparent)" }}
+                >
+                  <Stars value={r.rating} />
+                  <blockquote className="mt-3 flex-1 text-[0.95em] leading-relaxed">“{r.text}”</blockquote>
+                  <figcaption className="mt-4 flex items-center gap-3">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full text-[0.85em] font-extrabold" style={{ background: "var(--q-accent)", color: "var(--q-accent-text)" }}>
+                      {r.name.charAt(0)}
+                    </span>
+                    <span className="min-w-0 text-[0.85em]">
+                      <b className="block truncate">{r.name}{r.city ? ` · ${r.city}` : ""}</b>
+                      {r.verified && (
+                        <span className="inline-flex items-center gap-1 text-[0.9em] font-semibold" style={accent}>
+                          <BadgeCheck className="size-3.5" /> Compra verificada
+                        </span>
+                      )}
+                    </span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
+          {items.length > 0 && <p className="mt-4 text-center text-[0.72em]" style={muted}>Avaliações enviadas por compradores e publicadas com autorização. Experiências individuais; não representam garantia de resultado.</p>}
+        </Container>
+      );
+    }
     case "testimonials":
       if (!b.items.length) return null;
       return (

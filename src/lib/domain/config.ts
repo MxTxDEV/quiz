@@ -288,6 +288,19 @@ export const blockSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     ...blockBase,
+    type: z.literal("reviews"),
+    title: shortText.default("Quem comprou, avalia"),
+    subtitle: z.string().max(300).default(""),
+    /** quantas avaliações aprovadas exibir */
+    maxItems: z.number().int().min(1).max(12).default(6),
+    /** mostra "X pessoas já acessaram" com o total real de vendas confirmadas */
+    showBuyerCount: z.boolean().default(true),
+    /** só mostra o contador a partir deste número de compradores */
+    minBuyers: z.number().int().min(1).max(100000).default(10),
+    buyerLabel: z.string().max(120).default("pessoas já acessaram"),
+  }),
+  z.object({
+    ...blockBase,
     type: z.literal("offerCard"),
     title: shortText.default("Seu acesso"),
     /** vazio = lista automática (produto + bônus da oferta) */

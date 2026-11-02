@@ -212,6 +212,34 @@ export const purchases = pgTable(
   ],
 );
 
+// ---------- Avaliações de compradores (prova social real) ----------
+
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    campaignId: uuid("campaign_id")
+      .notNull()
+      .references(() => campaigns.id, { onDelete: "cascade" }),
+    /** nome como será exibido (primeiro nome + inicial) */
+    name: text("name").notNull(),
+    city: text("city").notNull().default(""),
+    rating: integer("rating").notNull(),
+    text: text("text").notNull(),
+    /** e-mail só para conferir a compra; nunca é exibido */
+    email: text("email"),
+    /** true quando o e-mail bate com uma venda confirmada da campanha */
+    verified: boolean("verified").notNull().default(false),
+    consent: boolean("consent").notNull().default(false),
+    consentText: text("consent_text").notNull().default(""),
+    status: text("status", { enum: ["pending", "approved", "rejected"] }).notNull().default("pending"),
+    ipHash: text("ip_hash"),
+    createdAt: createdAt(),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  },
+  (t) => [index("reviews_campaign_idx").on(t.campaignId, t.status, t.createdAt)],
+);
+
 export const adSpend = pgTable(
   "ad_spend",
   {

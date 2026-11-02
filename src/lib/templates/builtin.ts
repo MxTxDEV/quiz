@@ -651,10 +651,13 @@ function rotaInvisivel(): CampaignConfig {
       // 6 — Bônus (exibe apenas os bônus cadastrados na oferta)
       b("bonuses", { tone: "surface", title: "E ainda tem mais..." }),
 
-      // 7 — Oferta
+      // 7 — Avaliações reais de compradores (oculto até haver avaliações aprovadas)
+      b("reviews", { title: "Quem comprou, avalia" }),
+
+      // 8 — Oferta
       b("offerCard", { title: "Seu acesso ao ROTA INVISÍVEL", buttonLabel: "Quero acessar o Rota Invisível", note: "Pagamento processado com segurança pela plataforma de checkout." }),
 
-      // 8 — FAQ (essencial)
+      // 9 — FAQ (essencial)
       b("faq", {
         tone: "surface",
         title: "Perguntas frequentes",
@@ -666,7 +669,7 @@ function rotaInvisivel(): CampaignConfig {
         ],
       }),
 
-      // 9 — CTA final
+      // 10 — CTA final
       b("ctaSection", {
         headline: "Você pode continuar procurando respostas ou começar a explorar novos caminhos.",
         subheadline: "Conheça as possibilidades, escolha uma direção e dê o primeiro passo.",

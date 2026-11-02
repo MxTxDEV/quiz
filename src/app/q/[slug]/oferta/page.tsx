@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getPublishedCampaignBySlug } from "@/lib/services/campaigns";
 import { getSessionProfile, PublicFlowError } from "@/lib/services/public-flow";
 import { getSetting } from "@/lib/services/settings";
+import { socialProof } from "@/lib/services/reviews";
 import { SalesPageView, type PersonalData } from "@/components/public/sales-page";
 import { TrackingScripts } from "@/components/public/tracking-scripts";
 import { SalesTracker } from "@/components/public/sales-tracker";
@@ -50,7 +51,8 @@ export default async function OfferPage({ params, searchParams }: Props) {
       if (!(e instanceof PublicFlowError)) throw e;
     }
   }
-  const privacy = await getSetting("privacy");
+  const usesReviews = campaign.config.salesPage.blocks.some((b) => b.type === "reviews");
+  const [privacy, social] = await Promise.all([getSetting("privacy"), usesReviews ? socialProof(campaign.id) : Promise.resolve(undefined)]);
   const { offer, salesPage, tracking } = campaign.config;
   const checkoutHref = (blockId: string) =>
     sessionId ? `/api/public/checkout?s=${sessionId}&b=${encodeURIComponent(blockId)}` : offer.checkoutUrl || "#";
@@ -65,6 +67,7 @@ export default async function OfferPage({ params, searchParams }: Props) {
           checkoutHref,
           personal,
           legal: { controllerName: privacy.controllerName, document: privacy.document, contactEmail: privacy.contactEmail, hasTerms: !!privacy.termsText },
+          social,
         }}
       />
       <SalesTracker sessionId={sessionId} profile={profile?.name ?? null} value={offer.priceCents / 100} />

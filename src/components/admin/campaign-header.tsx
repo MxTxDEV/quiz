@@ -15,6 +15,7 @@ const tabs = [
   { href: "/quiz", label: "Quiz" },
   { href: "/results", label: "Resultados e regras" },
   { href: "/sales-page", label: "Página de vendas" },
+  { href: "/reviews", label: "Avaliações" },
   { href: "/leads", label: "Leads e LGPD" },
   { href: "/tracking", label: "Rastreamento" },
   { href: "/analytics", label: "Analytics" },
