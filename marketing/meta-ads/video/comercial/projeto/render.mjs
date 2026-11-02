@@ -120,9 +120,10 @@ if (mode === "preview") {
 const [voice, sfx, music, amb, out] = rest.slice(1);
 const frames = Math.ceil(TL.duration * FPS);
 const tmp = path.join(path.dirname(out), ".frames");
-rmSync(tmp, { recursive: true, force: true });
-mkdirSync(tmp, { recursive: true });
-for (let f = 0; f < frames; f++) {
+// REUSE_FRAMES=1 → reaproveita os quadros já renderizados (só refaz a mixagem/encode)
+const reuse = process.env.REUSE_FRAMES === "1";
+if (!reuse) { rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true }); }
+for (let f = 0; f < (reuse ? 0 : frames); f++) {
   await page.evaluate((t) => window.draw(t), f / FPS);
   await page.screenshot({ path: path.join(tmp, `${String(f).padStart(5, "0")}.jpg`), type: "jpeg", quality: 92 });
   if (f % 150 === 0) console.log(`quadro ${f}/${frames}`);
@@ -140,7 +141,7 @@ execFileSync("ffmpeg", [
     "[1:a]aresample=48000,aformat=channel_layouts=stereo,highpass=f=80,equalizer=f=3200:t=q:w=1.2:g=2.5,equalizer=f=250:t=q:w=1:g=-2,acompressor=threshold=0.1:ratio=3:attack=8:release=120,loudnorm=I=-16:TP=-2:LRA=9,asplit=3[v][k1][k2]",
     "[2:a]aresample=48000,loudnorm=I=-23:TP=-2.5:LRA=18[fx]",
     "[3:a]aresample=48000,loudnorm=I=-26:TP=-4:LRA=12[mus]",
-    "[4:a]aresample=48000,loudnorm=I=-36:TP=-10:LRA=10[amb]",
+    "[4:a]aresample=48000,loudnorm=I=-36:TP=-9:LRA=10[amb]",
     "[mus][k1]sidechaincompress=threshold=0.04:ratio=5:attack=25:release=400[md]",
     "[amb][k2]sidechaincompress=threshold=0.04:ratio=4:attack=25:release=400[ad]",
     "[v][fx][md][ad]amix=inputs=4:normalize=0:duration=first,alimiter=limit=0.89,loudnorm=I=-14:TP=-1.2:LRA=10[a]",
