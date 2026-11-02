@@ -94,7 +94,8 @@
 
 /* topo: chips e livro com paralaxe própria */
 .fx-chip-inner { animation: fx-bob var(--dur, 7s) ease-in-out infinite; }
-.fx-on .fx-chip { translate: 0 calc(min(var(--sy, 0), 900) * var(--spd, .5) * -.35px); }
+.fx-on .fx-chip { translate: 0 calc(min(var(--sy, 0), 900) * var(--spd, .5) * -.1px); }
+@media (max-width: 639px) { .fx-on .fx-chip { translate: none; } }
 .fx-on .fx-book { translate: 0 calc(min(var(--sy, 0), 900) * .12px); rotate: calc(min(var(--sy, 0), 900) * -.006deg); }
 
 /* orbe líquido (metaballs) atrás do livro */
@@ -121,6 +122,85 @@
 .fx-page .fx-liquid-btn:hover .fx-liquid { animation-duration: 1.4s; }
 @keyframes fx-liquid-rise { 0%, 100% { transform: translate3d(-35%, 18%, 0) scale(.9); opacity: .25; } 50% { transform: translate3d(35%, -8%, 0) scale(1.25); opacity: .7; } }
 
+/* ===================== Produto em destaque: aura, LED e brilho ===================== */
+.fx-aura, .fx-floor, .fx-twinkle, .fx-led, .fx-cover-shine { display: none; }
+.fx-hero-book { isolation: isolate; }
+.fx-page .fx-aura {
+  display: block; position: absolute; inset: -16% -26%; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 0deg, var(--q-accent), #ffc17a, transparent 28%, var(--q-accent) 50%, #ff8a2a, transparent 78%, var(--q-accent));
+  /* borda suave com máscara radial em vez de blur: o navegador desenha uma vez e só gira a camada */
+  -webkit-mask: radial-gradient(closest-side, #000 42%, rgba(0, 0, 0, .7) 64%, transparent 100%);
+  mask: radial-gradient(closest-side, #000 42%, rgba(0, 0, 0, .7) 64%, transparent 100%);
+  opacity: .85; will-change: transform;
+  animation: fx-spin 9s linear infinite, fx-glow 3.6s ease-in-out infinite;
+}
+.fx-page .fx-aura-2 {
+  inset: 2% -6%; opacity: .7; animation-duration: 6s, 2.8s; animation-direction: reverse, normal;
+  background: conic-gradient(from 90deg, transparent, var(--q-accent) 18%, transparent 36%, #ffd09a 56%, transparent 74%);
+}
+@keyframes fx-spin { to { rotate: 360deg; } }
+@keyframes fx-aura-pulse { 0%, 100% { scale: .94; opacity: .42; } 50% { scale: 1.06; opacity: .7; } }
+@keyframes fx-glow { 0%, 100% { opacity: .62; } 50% { opacity: 1; } }
+
+/* luz no "chão" sob o livro */
+.fx-page .fx-floor {
+  display: block; position: absolute; left: 6%; right: 6%; bottom: -12%; height: 18%; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--q-accent) 75%, transparent), transparent);
+  animation: fx-glow 3.6s ease-in-out infinite;
+}
+
+/* fita de LED percorrendo a borda da capa */
+@property --fx-led { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.fx-page .fx-led {
+  display: block; position: absolute; inset: -3px; z-index: 2; pointer-events: none;
+  border-radius: 4px 9px 9px 4px; padding: 3px;
+  background: conic-gradient(from var(--fx-led), transparent 0 62%, #ffe2bf 72%, var(--q-accent) 80%, transparent 90%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  filter: drop-shadow(0 0 6px var(--q-accent)) drop-shadow(0 0 14px var(--q-accent));
+  animation: fx-led-run 3.2s linear infinite;
+}
+@keyframes fx-led-run { to { --fx-led: 360deg; } }
+
+/* reflexo de luz varrendo a capa (não altera a imagem) */
+.fx-page .fx-cover-shine {
+  display: block; position: absolute; top: -20%; bottom: -20%; left: 0; width: 38%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .26) 45%, rgba(255, 255, 255, .06) 60%, transparent);
+  will-change: transform; transform: translate3d(-160%, 0, 0) skewX(-14deg); animation: fx-cover-shine 5.5s cubic-bezier(.5, 0, .2, 1) infinite;
+}
+@keyframes fx-cover-shine { 0%, 55% { transform: translate3d(-160%, 0, 0) skewX(-14deg); } 85%, 100% { transform: translate3d(330%, 0, 0) skewX(-14deg); } }
+
+/* brilhos piscando ao redor */
+.fx-page .fx-twinkle {
+  display: block; position: absolute; width: 14px; height: 14px; z-index: 3; pointer-events: none;
+  background: #fff; clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+  will-change: transform, opacity; animation: fx-twinkle 2.6s ease-in-out infinite;
+}
+.fx-tw-1 { top: 4%; right: -6%; }
+.fx-tw-2 { bottom: 16%; left: -9%; width: 10px !important; height: 10px !important; animation-delay: -.9s !important; }
+.fx-tw-3 { top: 42%; right: -12%; width: 8px !important; height: 8px !important; animation-delay: -1.7s !important; }
+@keyframes fx-twinkle { 0%, 100% { scale: .2; opacity: 0; rotate: 0deg; } 45% { scale: 1; opacity: 1; rotate: 45deg; } 70% { scale: .5; opacity: .4; } }
+
+/* animações de seções fora da tela ficam pausadas (economia de bateria e GPU) */
+.fx-on [data-off] * { animation-play-state: paused !important; }
+
+/* ===================== Celular: mesmo visual, menos custo =====================
+   - sem desfoque de fundo, sem filtro "goo" e sem sombras com filtro nos objetos (os mais pesados para GPU de celular)
+   - menos manchas e menos objetos; seções fora da tela não são renderizadas até chegar perto */
+@media (max-width: 639px) {
+  .fx-blob-c { display: none; }
+  .fx-blob-a { width: 120vw; height: 90vw; animation: none; }
+  .fx-blob-b { width: 110vw; height: 120vw; animation: none; }
+  .fx-blob { will-change: translate; }
+  .fx-floater { filter: none; }
+  .fx-floater-inner { animation: none; }
+  .fx-orb { display: none; }
+  .fx-page .fx-aura { inset: -12% -22%; }
+  .fx-page .fx-led { filter: none; box-shadow: 0 0 18px -4px var(--q-accent); }
+  .fx-page [data-block]:not(:first-of-type) { content-visibility: auto; contain-intrinsic-size: auto 720px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .fx-blob, .fx-floater-inner, .fx-chip-inner, .fx-goo, .fx-wave, .fx-liquid { animation: none !important; }
+  .fx-blob, .fx-floater-inner, .fx-chip-inner, .fx-goo, .fx-wave, .fx-liquid, .fx-aura, .fx-floor, .fx-led, .fx-cover-shine, .fx-twinkle { animation: none !important; }
+  .fx-cover-shine, .fx-twinkle { display: none !important; }
 }

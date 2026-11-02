@@ -165,8 +165,19 @@ export function BookMockup({
 }) {
   const src = usableImageUrl(imageUrl, checkoutUrl);
   const w = size === "lg" ? "w-[220px] sm:w-[260px]" : size === "md" ? "w-[104px] sm:w-[150px]" : "w-[110px]";
+  const glow = size === "lg";
   return (
-    <div className="[perspective:1400px]" aria-hidden>
+    <div className={`relative [perspective:1400px] ${glow ? "fx-hero-book" : ""}`} aria-hidden>
+      {glow && (
+        <>
+          <div className="fx-aura" />
+          <div className="fx-aura fx-aura-2" />
+          <div className="fx-floor" />
+          <span className="fx-twinkle fx-tw-1" />
+          <span className="fx-twinkle fx-tw-2" />
+          <span className="fx-twinkle fx-tw-3" />
+        </>
+      )}
       <div
         className={`relative ${w} aspect-[3/4] [transform-style:preserve-3d] transition-transform duration-500 [transform:rotateY(-22deg)_rotateX(4deg)] hover:[transform:rotateY(-12deg)_rotateX(2deg)]`}
       >
@@ -175,6 +186,7 @@ export function BookMockup({
           className="absolute inset-y-[2%] right-0 w-[7%] origin-right [transform:rotateY(90deg)_translateX(50%)]"
           style={{ background: "repeating-linear-gradient(90deg,#e8e8e8 0 2px,#cfcfcf 2px 3px)" }}
         />
+        {glow && <div className="fx-led" />}
         {/* capa */}
         <div
           className="absolute inset-0 overflow-hidden rounded-r-[6px] rounded-l-[2px]"
@@ -198,6 +210,7 @@ export function BookMockup({
               </div>
           </div>
           {src && <CoverImage src={src} className="absolute inset-0 h-full w-full object-cover" />}
+          {glow && <div className="fx-cover-shine" />}
           <div className="pointer-events-none absolute inset-y-0 left-0 w-[6%]" style={{ background: "linear-gradient(90deg,rgba(0,0,0,.45),transparent)" }} />
         </div>
       </div>
@@ -214,13 +227,13 @@ function HeroVisual({ offer, brand, block }: { offer: Offer; brand: Brand; block
     { icon: Laptop, className: "right-2 bottom-[8%]" },
   ];
   return (
-    <div className="relative mx-auto flex h-[340px] w-full max-w-[380px] items-center justify-center sm:h-[420px]">
+    <div className="relative mx-auto -mt-2 flex h-[330px] w-full max-w-[380px] items-center justify-center sm:mt-0 sm:h-[420px]">
       <div className="absolute inset-[12%] rounded-full blur-3xl" style={{ background: "color-mix(in srgb, var(--q-accent) 22%, transparent)" }} />
       <LiquidOrb />
       {chips.map(({ icon: Icon, className }, i) => (
         <div key={i} className={`fx-chip absolute ${className}`} style={{ "--spd": [0.35, 0.6, 0.5, 0.8][i], "--dur": `${6 + i * 1.5}s` } as React.CSSProperties} aria-hidden>
           <div
-            className="fx-chip-inner grid size-11 place-items-center rounded-full border backdrop-blur"
+            className="fx-chip-inner grid size-11 place-items-center rounded-full border sm:backdrop-blur"
             style={{ borderColor: hairline, background: "color-mix(in srgb, var(--q-surface) 80%, transparent)" }}
           >
             <Icon className="size-[18px]" style={accent} />
@@ -270,15 +283,15 @@ function renderBlock(b: Block, env: Env): React.ReactNode {
             <div className="text-center lg:text-left">
               {b.badge && (
                 <span
-                  className="mb-6 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[0.72em] font-semibold uppercase tracking-[0.12em]"
+                  className="mb-4 sm:mb-6 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[0.72em] font-semibold uppercase tracking-[0.12em]"
                   style={{ borderColor: "color-mix(in srgb, var(--q-accent) 45%, transparent)", color: "var(--q-accent)" }}
                 >
                   <BadgeCheck className="size-3.5" /> {b.badge}
                 </span>
               )}
-              <h1 className="text-balance text-[2.15em] font-black leading-[1.03] tracking-[-0.035em] sm:text-[3.3em]">{fill(b.headline, ctx)}</h1>
-              {b.subheadline && <p className="mx-auto mt-6 max-w-xl text-[1.08em] leading-relaxed lg:mx-0" style={muted}>{fill(b.subheadline, ctx)}</p>}
-              <div className="mt-8 flex flex-col items-center gap-3 lg:items-start">
+              <h1 className="text-balance text-[2em] font-black leading-[1.03] tracking-[-0.035em] sm:text-[3.3em]">{fill(b.headline, ctx)}</h1>
+              {b.subheadline && <p className="mx-auto mt-4 max-w-xl text-[1.02em] leading-relaxed sm:mt-6 sm:text-[1.08em] lg:mx-0" style={muted}>{fill(b.subheadline, ctx)}</p>}
+              <div className="mt-6 flex flex-col items-center gap-3 sm:mt-8 lg:items-start">
                 <BuyButton
                   href={ctaHref(b.ctaAction, b.id, env)}
                   purchase={!(b.ctaAction === "offer" && env.hasOfferCard)}
@@ -727,7 +740,7 @@ export function SalesPageView({
           <section
             key={b.id}
             data-block={b.type}
-            className={`reveal ${b.type === "footer" ? "pb-10 pt-4" : first ? "pb-16 pt-10 sm:pb-24 sm:pt-14" : "py-[calc(4rem*var(--q-space))] sm:py-[calc(5.5rem*var(--q-space))]"}`}
+            className={`reveal ${b.type === "footer" ? "pb-10 pt-4" : first ? "pb-10 pt-7 sm:pb-24 sm:pt-14" : "py-[calc(4rem*var(--q-space))] sm:py-[calc(5.5rem*var(--q-space))]"}`}
             style={toneStyle(b.tone, fx)}
           >
             {node}
