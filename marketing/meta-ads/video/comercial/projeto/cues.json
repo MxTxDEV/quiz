@@ -1,0 +1,321 @@
+[
+ {
+  "t": 0,
+  "kind": "ambience",
+  "dur": 12.22
+ },
+ {
+  "t": 0.12,
+  "kind": "notif",
+  "tag": "notif"
+ },
+ {
+  "t": 0.35,
+  "kind": "countdown",
+  "dur": 1.024
+ },
+ {
+  "t": 2.687,
+  "kind": "bass",
+  "tag": "zero",
+  "shake": 10
+ },
+ {
+  "t": 2.687,
+  "kind": "glitch",
+  "dur": 0.3
+ },
+ {
+  "t": 3.657,
+  "kind": "whoosh",
+  "flash": 0.15
+ },
+ {
+  "t": 3.857,
+  "kind": "ticks",
+  "dur": 2.2479999999999998
+ },
+ {
+  "t": 6.045,
+  "kind": "slide"
+ },
+ {
+  "t": 6.695,
+  "kind": "stamp",
+  "tag": "stamp",
+  "shake": 6
+ },
+ {
+  "t": 7.412,
+  "kind": "thud",
+  "tag": "drop",
+  "shake": 5
+ },
+ {
+  "t": 7.672,
+  "kind": "thud",
+  "tag": "drop",
+  "shake": 5
+ },
+ {
+  "t": 7.912,
+  "kind": "thud",
+  "tag": "drop",
+  "shake": 5
+ },
+ {
+  "t": 8.957,
+  "kind": "flip",
+  "tag": "flip"
+ },
+ {
+  "t": 9.757,
+  "kind": "flip",
+  "tag": "flip"
+ },
+ {
+  "t": 10.557,
+  "kind": "flip",
+  "tag": "flip"
+ },
+ {
+  "t": 12.22,
+  "kind": "glitch",
+  "dur": 0.35
+ },
+ {
+  "t": 12.22,
+  "kind": "cut"
+ },
+ {
+  "t": 12.77,
+  "kind": "riser",
+  "dur": 4.983
+ },
+ {
+  "t": 15.101,
+  "kind": "scratch"
+ },
+ {
+  "t": 15.461,
+  "kind": "spin",
+  "dur": 1.8820000000000014
+ },
+ {
+  "t": 17.243,
+  "kind": "lock",
+  "tag": "lock"
+ },
+ {
+  "t": 17.753,
+  "kind": "impact",
+  "tag": "reveal",
+  "shake": 12,
+  "leak": 1,
+  "flash": 0.55
+ },
+ {
+  "t": 17.903,
+  "kind": "shimmer"
+ },
+ {
+  "t": 22.791,
+  "kind": "pop",
+  "tag": "pin0"
+ },
+ {
+  "t": 22.821,
+  "kind": "ding",
+  "k": 0
+ },
+ {
+  "t": 24.323,
+  "kind": "pop",
+  "tag": "pin1"
+ },
+ {
+  "t": 24.353,
+  "kind": "ding",
+  "k": 1
+ },
+ {
+  "t": 25.599,
+  "kind": "pop",
+  "tag": "pin2"
+ },
+ {
+  "t": 25.629,
+  "kind": "ding",
+  "k": 2
+ },
+ {
+  "t": 26.456,
+  "kind": "riser",
+  "dur": 0.9
+ },
+ {
+  "t": 27.356,
+  "kind": "whoosh",
+  "leak": 0.8,
+  "flash": 0.35
+ },
+ {
+  "t": 28.106,
+  "kind": "impact",
+  "tag": "bookLand",
+  "soft": true,
+  "shake": 4
+ },
+ {
+  "t": 28.656,
+  "kind": "shine",
+  "tag": "bookShine"
+ },
+ {
+  "t": 31.468,
+  "kind": "swipe"
+ },
+ {
+  "t": 31.718,
+  "kind": "count",
+  "dur": 0.9
+ },
+ {
+  "t": 33.971,
+  "kind": "ding",
+  "tag": "online",
+  "k": 1
+ },
+ {
+  "t": 34.996,
+  "kind": "ding",
+  "tag": "offline",
+  "k": 2
+ },
+ {
+  "t": 35.765,
+  "kind": "swipe"
+ },
+ {
+  "t": 36.065,
+  "kind": "pop",
+  "tag": "tile0",
+  "k": 0
+ },
+ {
+  "t": 36.185,
+  "kind": "pop",
+  "tag": "tile1",
+  "k": 1
+ },
+ {
+  "t": 36.305,
+  "kind": "pop",
+  "tag": "tile2",
+  "k": 2
+ },
+ {
+  "t": 36.425,
+  "kind": "pop",
+  "tag": "tile3",
+  "k": 3
+ },
+ {
+  "t": 36.545,
+  "kind": "pop",
+  "tag": "tile4",
+  "k": 4
+ },
+ {
+  "t": 36.665,
+  "kind": "pop",
+  "tag": "tile5",
+  "k": 5
+ },
+ {
+  "t": 38.653,
+  "kind": "swipe"
+ },
+ {
+  "t": 39.153,
+  "kind": "ping"
+ },
+ {
+  "t": 39.603,
+  "kind": "ping"
+ },
+ {
+  "t": 40.053,
+  "kind": "ping"
+ },
+ {
+  "t": 41.141,
+  "kind": "swipe"
+ },
+ {
+  "t": 41.391,
+  "kind": "ding",
+  "tag": "wk0",
+  "k": 0
+ },
+ {
+  "t": 42.149,
+  "kind": "ding",
+  "tag": "wk1",
+  "k": 1
+ },
+ {
+  "t": 42.958,
+  "kind": "ding",
+  "tag": "wk2",
+  "k": 2
+ },
+ {
+  "t": 43.666,
+  "kind": "ding",
+  "tag": "wk3",
+  "k": 3
+ },
+ {
+  "t": 44.259,
+  "kind": "whoosh"
+ },
+ {
+  "t": 44.759,
+  "kind": "riser",
+  "dur": 1.520000000000006
+ },
+ {
+  "t": 46.279,
+  "kind": "impact",
+  "tag": "climax",
+  "shake": 14,
+  "leak": 1,
+  "flash": 0.5
+ },
+ {
+  "t": 46.279,
+  "kind": "bass"
+ },
+ {
+  "t": 48.259,
+  "kind": "shine",
+  "tag": "logo",
+  "leak": 0.7
+ },
+ {
+  "t": 49.609,
+  "kind": "pop",
+  "tag": "cta",
+  "k": 2
+ },
+ {
+  "t": 53.519,
+  "kind": "tap",
+  "tag": "tap"
+ },
+ {
+  "t": 56.919,
+  "kind": "tail"
+ }
+]

@@ -1,0 +1,141 @@
+{
+ "titulo": "Rota Invisível — comercial 55 s (9:16)",
+ "linhas": [
+  {
+   "id": "h1",
+   "etapa": 1,
+   "fala": "Dia doze.",
+   "legenda": "Dia 12.",
+   "pausa": 0.28,
+   "ritmo": 0.84
+  },
+  {
+   "id": "h2",
+   "etapa": 1,
+   "fala": "E o dinheiro... já acabou.",
+   "legenda": "E o dinheiro… já acabou.",
+   "pausa": 0.72,
+   "ritmo": 0.84
+  },
+  {
+   "id": "p1",
+   "etapa": 2,
+   "fala": "Você trabalha o mês inteiro.",
+   "legenda": "Você trabalha o mês inteiro.",
+   "pausa": 0.24,
+   "ritmo": 0.84
+  },
+  {
+   "id": "p2",
+   "etapa": 2,
+   "fala": "Paga uma conta... e chega outra.",
+   "legenda": "Paga uma conta… e chega outra.",
+   "pausa": 0.28,
+   "ritmo": 0.84
+  },
+  {
+   "id": "p3",
+   "etapa": 2,
+   "fala": "E a vontade de mudar de vida fica sempre pro mês que vem.",
+   "legenda": "E a vontade de mudar de vida fica sempre pro mês que vem.",
+   "pausa": 0.8,
+   "ritmo": 0.84
+  },
+  {
+   "id": "b1",
+   "etapa": 3,
+   "fala": "Mas e se o problema não for falta de dinheiro...",
+   "legenda": "Mas e se o problema não for falta de dinheiro…",
+   "pausa": 0.36,
+   "ritmo": 0.84
+  },
+  {
+   "id": "b2",
+   "etapa": 3,
+   "fala": "e sim, falta de direção?",
+   "legenda": "…e sim falta de direção?",
+   "pausa": 0.56,
+   "ritmo": 0.84
+  },
+  {
+   "id": "b3",
+   "etapa": 3,
+   "fala": "Existem rendas extras que começam com o que você já tem.",
+   "legenda": "Existem rendas extras que começam com o que você já tem:",
+   "pausa": 0.2,
+   "ritmo": 0.84
+  },
+  {
+   "id": "b4",
+   "etapa": 3,
+   "fala": "Um celular. Uma habilidade. Algumas horas por semana.",
+   "legenda": "um celular, uma habilidade, algumas horas por semana.",
+   "pausa": 0.56,
+   "ritmo": 0.84
+  },
+  {
+   "id": "r1",
+   "etapa": 4,
+   "fala": "O Rota Invisível é um guia prático que mostra esses caminhos.",
+   "legenda": "O Rota Invisível é um guia prático que mostra esses caminhos.",
+   "pausa": 0.28,
+   "ritmo": 0.84
+  },
+  {
+   "id": "r2",
+   "etapa": 4,
+   "fala": "Trinta ideias de renda extra, online e offline.",
+   "legenda": "30 ideias de renda extra, online e offline.",
+   "pausa": 0.2,
+   "ritmo": 0.84
+  },
+  {
+   "id": "r3",
+   "etapa": 4,
+   "fala": "Ferramentas gratuitas, para começar com pouco.",
+   "legenda": "Ferramentas gratuitas para começar com pouco.",
+   "pausa": 0.2,
+   "ritmo": 0.84
+  },
+  {
+   "id": "r4",
+   "etapa": 4,
+   "fala": "Como encontrar seus primeiros clientes.",
+   "legenda": "Como encontrar seus primeiros clientes.",
+   "pausa": 0.2,
+   "ritmo": 0.84
+  },
+  {
+   "id": "r5",
+   "etapa": 4,
+   "fala": "E um plano de trinta dias, passo a passo.",
+   "legenda": "E um plano de 30 dias, passo a passo.",
+   "pausa": 0.64,
+   "ritmo": 0.84
+  },
+  {
+   "id": "c1",
+   "etapa": 5,
+   "fala": "Sem promessa de dinheiro fácil. Com um caminho claro.",
+   "legenda": "Sem promessa de dinheiro fácil. Com um caminho claro.",
+   "pausa": 0.36,
+   "ritmo": 0.84
+  },
+  {
+   "id": "c2",
+   "etapa": 5,
+   "fala": "Faça o quiz gratuito, e descubra a renda extra que combina com você.",
+   "legenda": "Faça o quiz gratuito e descubra a renda extra que combina com você.",
+   "pausa": 0.24,
+   "ritmo": 0.84
+  },
+  {
+   "id": "c3",
+   "etapa": 5,
+   "fala": "Toque no link, e comece hoje.",
+   "legenda": "Toque no link e comece hoje.",
+   "pausa": 0.0,
+   "ritmo": 0.84
+  }
+ ]
+}
