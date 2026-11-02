@@ -58,6 +58,12 @@ for k in range(1, K):
 g = int(np.argmin(dp[K - 1])); pick = [g]
 for k in range(K - 1, 0, -1): g = bk[k, g]; pick.append(g)
 pick = pick[::-1]
+# CORTES="0.87,3.29,..." → força as pausas (início do silêncio, em segundos no arquivo original), uma por fronteira
+import os
+if os.environ.get("CORTES"):
+    cuts = [float(c) for c in os.environ["CORTES"].split(",")]
+    assert len(cuts) == K, f"CORTES precisa de {K} valores"
+    pick = [int(np.argmin([abs(a / 100 - c) for a, b in gaps])) for c in cuts]
 
 bounds = [v0] + [x_ for g in pick for x_ in gaps[g]] + [v1]
 off = LEAD - v0 / 100
@@ -75,5 +81,5 @@ with wave.open(out_wav, "wb") as f:
     f.setnchannels(1); f.setsampwidth(2); f.setframerate(SR)
     f.writeframes((np.clip(y / max(1e-9, np.max(np.abs(y))) * .9, -1, 1) * 32767).astype("<i2").tobytes())
 json.dump({"duration": round(dur, 3), "linhas": out}, open(out_tl, "w"), ensure_ascii=False, indent=1)
-for l in out: print(f'{l["start"]:6.2f}–{l["end"]:6.2f}  {l["fala"]}')
+for l in out: print(f'{l["start"]:6.2f}–{l["end"]:6.2f}  {len(l["fala"]) / (l["end"] - l["start"]):5.1f} letras/s  {l["fala"]}')
 print("duração:", round(dur, 2), "s")

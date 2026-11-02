@@ -18,6 +18,8 @@ const [mode, tlPath, ...rest] = process.argv.slice(2);
 const TL = JSON.parse(readFileSync(tlPath, "utf8"));
 const L = Object.fromEntries(TL.linhas.map((l) => [l.id, l]));
 const at = (id, f) => +(L[id].start + (L[id].end - L[id].start) * f).toFixed(3);
+// marcas internas: a timeline pode trazer a fração exata de cada palavra-chave (ex.: b4.marcas.pin1); senão, usa o padrão
+const mk = (id, name, d) => at(id, L[id].marcas && L[id].marcas[name] != null ? L[id].marcas[name] : d);
 const FPS = 30, W = 1080, H = 1920;
 
 // ------------------------------------------------------------------ cues (cada som tem uma função na narrativa)
@@ -36,7 +38,7 @@ function buildCues() {
   add(s2 + .2, "ticks", { dur: L.p1.end - s2 - .1 });        // relógio + dias riscados
   add(L.p2.start - .2, "slide");
   add(L.p2.start + .45, "stamp", { tag: "stamp", shake: 6 }); // "paga uma conta"
-  const chega = at("p2", .62);
+  const chega = mk("p2", "chega", .62);
   [0, .26, .5].forEach((d) => add(chega + d, "thud", { tag: "drop", shake: 5 })); // "e chega outra"
   [0.55, 1.35, 2.15].forEach((d) => add(L.p3.start + d, "flip", { tag: "flip" })); // mês que vem, de novo
   // 3 · quebra de crença: silêncio, pergunta, bússola, revelação
@@ -50,7 +52,7 @@ function buildCues() {
   add(L.b1.start + .2, "riser", { dur: reveal - L.b1.start - .2 });
   add(reveal, "impact", { tag: "reveal", shake: 12, leak: 1, flash: .55 });
   add(reveal + .15, "shimmer");
-  [0, .36, .66].forEach((f, i) => { const t = at("b4", f) - .05; add(t, "pop", { tag: "pin" + i }); add(t + .03, "ding", { k: i }); });
+  [0, .36, .66].forEach((f, i) => { const t = mk("b4", "pin" + i, f) - .05; add(t, "pop", { tag: "pin" + i }); add(t + .03, "ding", { k: i }); });
   // 4 · produto
   const s4 = L.r1.start - .3;
   add(s4 - .9, "riser", { dur: .9 });
@@ -59,15 +61,15 @@ function buildCues() {
   add(s4 + 1.3, "shine", { tag: "bookShine" });
   ["r2", "r3", "r4", "r5"].forEach((id) => add(L[id].start - .25, "swipe"));
   add(L.r2.start, "count", { dur: .9 });
-  add(at("r2", .55), "ding", { tag: "online", k: 1 });
-  add(at("r2", .8), "ding", { tag: "offline", k: 2 });
+  add(mk("r2", "online", .55), "ding", { tag: "online", k: 1 });
+  add(mk("r2", "offline", .8), "ding", { tag: "offline", k: 2 });
   for (let i = 0; i < 6; i++) add(L.r3.start + .05 + i * .12, "pop", { tag: "tile" + i, k: i });
   [0, .45, .9].forEach((d) => add(L.r4.start + .25 + d, "ping"));
   [0, .3, .62, .9].forEach((f, i) => add(at("r5", f), "ding", { tag: "wk" + i, k: i }));
   // 5 · clímax e chamada
   const s5 = L.c1.start - .3;
   add(s5, "whoosh");
-  const climax = at("c1", .5);
+  const climax = mk("c1", "climax", .5);
   add(L.c1.start + .2, "riser", { dur: climax - L.c1.start - .2 });
   add(climax, "impact", { tag: "climax", shake: 14, leak: 1, flash: .5 });
   add(climax, "bass");

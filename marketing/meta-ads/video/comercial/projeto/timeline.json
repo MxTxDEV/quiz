@@ -1,145 +1,157 @@
 {
- "duration": 58.519,
+ "duration": 52.41,
  "linhas": [
   {
    "id": "h1",
    "etapa": 1,
    "fala": "Dia doze.",
    "legenda": "Dia 12.",
-   "pausa": 0.28,
+   "pausa": 0.48,
    "ritmo": 0.84,
    "start": 0.45,
-   "end": 1.124
+   "end": 1.26
   },
   {
    "id": "h2",
    "etapa": 1,
    "fala": "E o dinheiro... já acabou.",
    "legenda": "E o dinheiro… já acabou.",
-   "pausa": 0.72,
+   "pausa": 0.53,
    "ritmo": 0.84,
-   "start": 1.404,
-   "end": 3.237
+   "start": 1.74,
+   "end": 3.68
   },
   {
    "id": "p1",
    "etapa": 2,
    "fala": "Você trabalha o mês inteiro.",
    "legenda": "Você trabalha o mês inteiro.",
-   "pausa": 0.24,
+   "pausa": 0.35,
    "ritmo": 0.84,
-   "start": 3.957,
-   "end": 6.005
+   "start": 4.21,
+   "end": 5.93
   },
   {
    "id": "p2",
    "etapa": 2,
    "fala": "Paga uma conta... e chega outra.",
    "legenda": "Paga uma conta… e chega outra.",
-   "pausa": 0.28,
+   "pausa": 0.47,
    "ritmo": 0.84,
-   "start": 6.245,
-   "end": 8.127
+   "start": 6.28,
+   "end": 8.22,
+   "marcas": {
+    "chega": 0.58
+   }
   },
   {
    "id": "p3",
    "etapa": 2,
    "fala": "E a vontade de mudar de vida fica sempre pro mês que vem.",
    "legenda": "E a vontade de mudar de vida fica sempre pro mês que vem.",
-   "pausa": 0.8,
+   "pausa": 0.59,
    "ritmo": 0.84,
-   "start": 8.407,
-   "end": 11.77
+   "start": 8.69,
+   "end": 11.93
   },
   {
    "id": "b1",
    "etapa": 3,
    "fala": "Mas e se o problema não for falta de dinheiro...",
    "legenda": "Mas e se o problema não for falta de dinheiro…",
-   "pausa": 0.36,
+   "pausa": 0.18,
    "ritmo": 0.84,
-   "start": 12.57,
-   "end": 15.151
+   "start": 12.52,
+   "end": 15.28
   },
   {
    "id": "b2",
    "etapa": 3,
    "fala": "e sim, falta de direção?",
    "legenda": "…e sim falta de direção?",
-   "pausa": 0.56,
+   "pausa": 0.49,
    "ritmo": 0.84,
-   "start": 15.511,
-   "end": 17.393
+   "start": 15.46,
+   "end": 17.24
   },
   {
    "id": "b3",
    "etapa": 3,
    "fala": "Existem rendas extras que começam com o que você já tem.",
    "legenda": "Existem rendas extras que começam com o que você já tem:",
-   "pausa": 0.2,
+   "pausa": 0.41,
    "ritmo": 0.84,
-   "start": 17.953,
-   "end": 22.641
+   "start": 17.73,
+   "end": 20.9
   },
   {
    "id": "b4",
    "etapa": 3,
    "fala": "Um celular. Uma habilidade. Algumas horas por semana.",
    "legenda": "um celular, uma habilidade, algumas horas por semana.",
-   "pausa": 0.56,
+   "pausa": 0.43,
    "ritmo": 0.84,
-   "start": 22.841,
-   "end": 27.096
+   "start": 21.31,
+   "end": 24.64,
+   "marcas": {
+    "pin0": 0.0,
+    "pin1": 0.28,
+    "pin2": 0.6
+   }
   },
   {
    "id": "r1",
    "etapa": 4,
    "fala": "O Rota Invisível é um guia prático que mostra esses caminhos.",
    "legenda": "O Rota Invisível é um guia prático que mostra esses caminhos.",
-   "pausa": 0.28,
+   "pausa": 0.34,
    "ritmo": 0.84,
-   "start": 27.656,
-   "end": 31.438
+   "start": 25.07,
+   "end": 28.7
   },
   {
    "id": "r2",
    "etapa": 4,
    "fala": "Trinta ideias de renda extra, online e offline.",
    "legenda": "30 ideias de renda extra, online e offline.",
-   "pausa": 0.2,
+   "pausa": 0.31,
    "ritmo": 0.84,
-   "start": 31.718,
-   "end": 35.815
+   "start": 29.04,
+   "end": 32.23,
+   "marcas": {
+    "online": 0.6,
+    "offline": 0.82
+   }
   },
   {
    "id": "r3",
    "etapa": 4,
    "fala": "Ferramentas gratuitas, para começar com pouco.",
    "legenda": "Ferramentas gratuitas para começar com pouco.",
-   "pausa": 0.2,
+   "pausa": 0.29,
    "ritmo": 0.84,
-   "start": 36.015,
-   "end": 38.703
+   "start": 32.54,
+   "end": 35.16
   },
   {
    "id": "r4",
    "etapa": 4,
    "fala": "Como encontrar seus primeiros clientes.",
    "legenda": "Como encontrar seus primeiros clientes.",
-   "pausa": 0.2,
+   "pausa": 0.28,
    "ritmo": 0.84,
-   "start": 38.903,
-   "end": 41.191
+   "start": 35.45,
+   "end": 37.51
   },
   {
    "id": "r5",
    "etapa": 4,
    "fala": "E um plano de trinta dias, passo a passo.",
    "legenda": "E um plano de 30 dias, passo a passo.",
-   "pausa": 0.64,
+   "pausa": 0.27,
    "ritmo": 0.84,
-   "start": 41.391,
-   "end": 43.919
+   "start": 37.79,
+   "end": 40.36
   },
   {
    "id": "c1",
@@ -148,28 +160,31 @@
    "legenda": "Sem promessa de dinheiro fácil. Com um caminho claro.",
    "pausa": 0.36,
    "ritmo": 0.84,
-   "start": 44.559,
-   "end": 47.999
+   "start": 40.63,
+   "end": 43.83,
+   "marcas": {
+    "climax": 0.62
+   }
   },
   {
    "id": "c2",
    "etapa": 5,
    "fala": "Faça o quiz gratuito, e descubra a renda extra que combina com você.",
    "legenda": "Faça o quiz gratuito e descubra a renda extra que combina com você.",
-   "pausa": 0.24,
+   "pausa": 0.32,
    "ritmo": 0.84,
-   "start": 48.359,
-   "end": 53.279
+   "start": 44.19,
+   "end": 48.12
   },
   {
    "id": "c3",
    "etapa": 5,
    "fala": "Toque no link, e comece hoje.",
    "legenda": "Toque no link e comece hoje.",
-   "pausa": 0.0,
+   "pausa": 0,
    "ritmo": 0.84,
-   "start": 53.519,
-   "end": 56.319
+   "start": 48.44,
+   "end": 50.21
   }
  ]
 }

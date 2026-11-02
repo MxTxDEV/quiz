@@ -8,11 +8,11 @@ cd "$(dirname "$0")/.."
 PY=${PY:-python3}
 if [ $# -ge 1 ]; then
   $PY projeto/sincronizar-voz.py projeto/narracao.json "$1" audio/narracao.wav projeto/timeline.json projeto/timeline-guia.json
-  VOZ=audio/narracao.wav; OUT=rota-invisivel-comercial-55s-voz-humana.mp4
+  VOZ=audio/narracao.wav; OUT=rota-invisivel-comercial.mp4
 else
   $PY projeto/gerar-voz.py projeto/narracao.json "${PIPER_VOICE:-/tmp/tts/voice/pt-br-edresson-low.onnx}" audio/narracao-guia.wav projeto/timeline.json
   cp projeto/timeline.json projeto/timeline-guia.json
-  VOZ=audio/narracao-guia.wav; OUT=rota-invisivel-comercial-55s.mp4
+  VOZ=audio/narracao-guia.wav; OUT=rota-invisivel-comercial-voz-guia.mp4
 fi
 node projeto/render.mjs cues projeto/timeline.json projeto/cues.json
 $PY projeto/gerar-audio.py projeto/timeline.json projeto/cues.json audio/sfx.wav audio/trilha.wav audio/ambiente.wav
