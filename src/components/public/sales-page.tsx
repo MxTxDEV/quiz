@@ -4,6 +4,8 @@ import type { Block, Brand, Offer, Quiz, SalesPage } from "@/lib/domain/config";
 import type { Answers, Attributes } from "@/lib/engine/answers";
 import { evaluateGroup } from "@/lib/engine/rules";
 import { themeVars } from "./theme";
+import { CoverImage } from "./cover-image";
+import { usableImageUrl } from "@/lib/domain/images";
 
 /**
  * Renderizador da página de vendas. Componente sem estado (Server e Client Components):
@@ -128,7 +130,7 @@ function BuyButton({ href, label, note, purchase = true, wide = false }: { href:
       <a
         href={href}
         data-purchase={purchase ? "" : undefined}
-        className={`group inline-flex min-h-14 items-center justify-center gap-2 rounded-[var(--q-radius)] px-7 py-4 text-center text-[0.95em] font-extrabold uppercase tracking-wide transition duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 ${wide ? "w-full" : "w-full sm:w-auto"}`}
+        className={`group inline-flex min-h-14 items-center justify-center gap-2 rounded-[var(--q-radius)] px-5 py-4 text-center text-[0.86em] font-extrabold uppercase tracking-[0.02em] sm:px-7 sm:text-[0.95em] sm:tracking-wide transition duration-200 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 ${wide ? "w-full" : "w-full sm:w-auto"}`}
         style={{
           background: "var(--q-accent)",
           color: "var(--q-accent-text)",
@@ -148,13 +150,17 @@ export function BookMockup({
   title,
   label,
   imageUrl,
+  checkoutUrl,
   size = "lg",
 }: {
   title: string;
   label?: string;
   imageUrl?: string;
+  /** links iguais ao checkout (ou de páginas) são ignorados: nunca viram imagem quebrada */
+  checkoutUrl?: string;
   size?: "lg" | "md" | "sm";
 }) {
+  const src = usableImageUrl(imageUrl, checkoutUrl);
   const w = size === "lg" ? "w-[220px] sm:w-[260px]" : size === "md" ? "w-[104px] sm:w-[150px]" : "w-[110px]";
   return (
     <div className="[perspective:1400px]" aria-hidden>
@@ -175,13 +181,10 @@ export function BookMockup({
             border: "1px solid rgba(255,255,255,.08)",
           }}
         >
-          {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
-          ) : (
-            <div className="relative flex h-full flex-col justify-between p-[9%] text-white">
+          {/* a capa gerada fica sempre por baixo; a imagem cadastrada cobre por cima e some se não carregar */}
+          <div className="relative flex h-full flex-col justify-between p-[9%] text-white">
               <svg className="absolute inset-0 h-full w-full opacity-90" viewBox="0 0 100 133" preserveAspectRatio="none">
-                <path d="M-5 120 C 20 110, 25 80, 45 78 S 70 60, 72 40 S 90 18, 110 12" fill="none" stroke="var(--q-accent)" strokeWidth="1.2" strokeDasharray="3 3" />
+                <path d="M-5 92 C 14 86, 24 70, 44 68 S 68 56, 72 40 S 90 18, 110 12" fill="none" stroke="var(--q-accent)" strokeWidth="1.2" strokeDasharray="3 3" />
                 <circle cx="72" cy="40" r="2.6" fill="var(--q-accent)" />
                 <circle cx="72" cy="40" r="6" fill="none" stroke="var(--q-accent)" strokeOpacity=".35" />
               </svg>
@@ -190,8 +193,8 @@ export function BookMockup({
                 {label && <p className="mb-[6%] text-[0.5em] font-bold uppercase tracking-[0.2em]" style={{ color: "var(--q-accent)" }}>{label}</p>}
                 <p className={`font-black uppercase leading-[0.95] tracking-tight ${size === "lg" ? "text-[1.55em]" : size === "md" ? "text-[0.68em] sm:text-[0.95em]" : "text-[0.7em]"}`}>{title}</p>
               </div>
-            </div>
-          )}
+          </div>
+          {src && <CoverImage src={src} className="absolute inset-0 h-full w-full object-cover" />}
           <div className="pointer-events-none absolute inset-y-0 left-0 w-[6%]" style={{ background: "linear-gradient(90deg,rgba(0,0,0,.45),transparent)" }} />
         </div>
       </div>
@@ -221,14 +224,14 @@ function HeroVisual({ offer, brand, block }: { offer: Offer; brand: Brand; block
         </div>
       ))}
       <div className="relative">
-        <BookMockup title={title || "Guia"} label={brand.tagline ? "Guia prático" : undefined} imageUrl={block.imageUrl || offer.coverImageUrl} />
+        <BookMockup title={title || "Guia"} label={brand.tagline ? "Guia prático" : undefined} imageUrl={usableImageUrl(block.imageUrl, offer.checkoutUrl) || offer.coverImageUrl} checkoutUrl={offer.checkoutUrl} />
       </div>
     </div>
   );
 }
 
 function BrandMark({ brand }: { brand: Brand }) {
-  if (brand.logoUrl)
+  if (usableImageUrl(brand.logoUrl))
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={brand.logoUrl} alt={brand.name} className="h-7 w-auto" />;
   if (!brand.name) return null;
@@ -368,7 +371,7 @@ function renderBlock(b: Block, env: Env): React.ReactNode {
         <Container>
           <div className="grid items-center gap-10 md:grid-cols-[0.8fr_1.2fr] md:gap-16">
             <div className="order-2 flex justify-center md:order-1">
-              <BookMockup title={offer.productName || page.brand.name || "Guia"} imageUrl={offer.coverImageUrl} label="Guia prático" />
+              <BookMockup title={offer.productName || page.brand.name || "Guia"} imageUrl={offer.coverImageUrl} checkoutUrl={offer.checkoutUrl} label="Guia prático" />
             </div>
             <div className="order-1 md:order-2">{content}</div>
           </div>
@@ -390,11 +393,11 @@ function renderBlock(b: Block, env: Env): React.ReactNode {
       );
     case "image":
     case "mockup":
-      if (!b.url) {
+      if (!usableImageUrl(b.url, offer.checkoutUrl)) {
         if (b.type !== "mockup") return null;
         return (
           <Container>
-            <div className="flex justify-center"><BookMockup title={offer.productName || page.brand.name || "Guia"} imageUrl={offer.coverImageUrl} /></div>
+            <div className="flex justify-center"><BookMockup title={offer.productName || page.brand.name || "Guia"} imageUrl={offer.coverImageUrl} checkoutUrl={offer.checkoutUrl} /></div>
             {b.caption && <p className="mt-6 text-center text-[0.9em]" style={muted}>{b.caption}</p>}
           </Container>
         );
@@ -485,7 +488,7 @@ function renderBlock(b: Block, env: Env): React.ReactNode {
           <div className="mt-10 grid grid-cols-2 gap-3 sm:mt-12 sm:gap-5 lg:grid-cols-4">
             {offer.bonuses.map((bonus, i) => (
               <div key={i} className="flex flex-col items-center rounded-[var(--q-radius)] border p-4 text-center sm:p-6" style={{ borderColor: hairline, background: "var(--q-surface)" }}>
-                <div className="flex h-[130px] items-center sm:h-[170px]"><BookMockup size="md" title={bonus.title} label={`Bônus ${String(i + 1).padStart(2, "0")}`} imageUrl={bonus.imageUrl} /></div>
+                <div className="flex h-[130px] items-center sm:h-[170px]"><BookMockup size="md" title={bonus.title} label={`Bônus ${String(i + 1).padStart(2, "0")}`} imageUrl={bonus.imageUrl} checkoutUrl={offer.checkoutUrl} /></div>
                 <p className="mt-4 text-[0.7em] font-bold uppercase tracking-[0.16em]" style={accent}>
                   <Gift className="mr-1 inline size-3.5 -translate-y-px" />Bônus {String(i + 1).padStart(2, "0")}
                 </p>
@@ -556,7 +559,7 @@ function renderBlock(b: Block, env: Env): React.ReactNode {
           >
             <div className="grid items-center gap-8 md:grid-cols-[0.9fr_1.1fr]">
               <div className="relative flex justify-center py-4">
-                <BookMockup title={offer.productName || page.brand.name || "Guia"} imageUrl={offer.coverImageUrl} label="Guia prático" />
+                <BookMockup title={offer.productName || page.brand.name || "Guia"} imageUrl={offer.coverImageUrl} checkoutUrl={offer.checkoutUrl} label="Guia prático" />
                 {offer.bonuses.length > 0 && (
                   <span className="absolute bottom-0 right-2 rounded-full px-3 py-1 text-[0.72em] font-extrabold uppercase" style={{ background: "var(--q-accent)", color: "var(--q-accent-text)" }}>
                     + {offer.bonuses.length} bônus

@@ -20,6 +20,12 @@ import type { Block, BlockType, CampaignConfig, Offer, Profile, Quiz } from "@/l
 import { GroupEditor, knownAttributes, newCondition } from "@/components/admin/results-editor";
 import type { Product } from "@/lib/db/schema";
 import { centsToInput, cn, parseMoneyToCents, uid } from "@/lib/utils";
+import { imageUrlProblem } from "@/lib/domain/images";
+
+const imageError = (url: string, checkoutUrl?: string) => {
+  const p = imageUrlProblem(url, checkoutUrl);
+  return p ? `Este link ${p}. Cole o endereço direto da imagem ou deixe vazio.` : null;
+};
 
 const blockOrder = Object.keys(blockLabels) as BlockType[];
 
@@ -137,7 +143,7 @@ export function SalesPageEditor({
                 <Field label="Nome da marca/produto" hint="Usado no cabeçalho, nos mockups gerados e no rodapé.">
                   <Input value={salesPage.brand.name} onChange={(e) => s.setValue({ offer, salesPage: { ...salesPage, brand: { ...salesPage.brand, name: e.target.value } } })} />
                 </Field>
-                <Field label="Logo (URL, opcional)" hint="Sem logo, o nome é exibido como marca tipográfica.">
+                <Field label="Logo (URL, opcional)" hint="Sem logo, o nome é exibido como marca tipográfica." error={imageError(salesPage.brand.logoUrl, offer.checkoutUrl)}>
                   <Input value={salesPage.brand.logoUrl} placeholder="https://..." onChange={(e) => s.setValue({ offer, salesPage: { ...salesPage, brand: { ...salesPage.brand, logoUrl: e.target.value } } })} />
                 </Field>
                 <Field label="Slogan" className="sm:col-span-2">
@@ -259,7 +265,7 @@ function BlockEditor({
               <Field label="Texto do botão" hint="Vazio = texto padrão da oferta."><Input value={b.ctaLabel} onChange={(e) => set({ ctaLabel: e.target.value })} /></Field>
               <CtaActionField value={b.ctaAction} onChange={(v) => set({ ctaAction: v })} />
             </div>
-            <Field label="Imagem do mockup (URL, opcional)" hint="Vazio = capa do produto ou mockup gerado com a identidade da página.">
+            <Field label="Imagem do mockup (URL, opcional)" hint="Link direto de uma imagem (.png, .jpg, .webp). Vazio = capa do produto ou mockup gerado com a identidade da página." error={imageError(b.imageUrl)}>
               <Input value={b.imageUrl} placeholder="https://..." onChange={(e) => set({ imageUrl: e.target.value })} />
             </Field>
             <SwitchRow label="Mostrar preço abaixo do botão" checked={b.showPrice} onCheckedChange={(v) => set({ showPrice: v })} />
@@ -496,7 +502,7 @@ function OfferEditor({ offer, onChange, product }: { offer: Offer; onChange: (o:
           <Field label="Nome do produto" hint="Exibido nos mockups e no card da oferta.">
             <Input value={offer.productName} onChange={(e) => set({ productName: e.target.value })} />
           </Field>
-          <Field label="Capa do produto (URL, opcional)" hint="Vazio = mockup gerado com a identidade da página.">
+          <Field label="Capa do produto (URL, opcional)" hint="Link direto de uma imagem (.png, .jpg, .webp) — não use o link do checkout. Vazio = mockup gerado com a identidade da página." error={imageError(offer.coverImageUrl, offer.checkoutUrl)}>
             <Input value={offer.coverImageUrl} placeholder="https://..." onChange={(e) => set({ coverImageUrl: e.target.value })} />
           </Field>
         </CardContent>

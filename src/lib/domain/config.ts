@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { imageUrlProblem } from "./images";
 
 /**
  * Contrato único da configuração de uma campanha.
@@ -407,5 +408,22 @@ export function publishIssues(config: CampaignConfig): string[] {
   }
   if (config.leadCapture.mode !== "off" && config.leadCapture.required && !config.leadCapture.requiredReason.trim())
     issues.push("Captura de lead obrigatória exige uma justificativa registrada.");
+  // campos de imagem com link de checkout/página aparecem como imagem quebrada
+  const checkout = config.offer.checkoutUrl;
+  const images: [string, string][] = [
+    ["Capa do produto", config.offer.coverImageUrl],
+    ["Logo da marca", config.salesPage.brand.logoUrl],
+    ["Imagem da introdução do quiz", config.quiz.intro.imageUrl],
+    ...config.offer.bonuses.map((x, i): [string, string] => [`Capa do bônus ${i + 1}`, x.imageUrl]),
+    ...config.quiz.questions.map((q): [string, string] => [`Imagem da pergunta "${q.title}"`, q.imageUrl]),
+    ...config.profiles.map((p): [string, string] => [`Imagem do perfil "${p.name}"`, p.imageUrl]),
+    ...config.salesPage.blocks.flatMap((bl): [string, string][] =>
+      bl.type === "hero" ? [["Imagem do bloco de topo", bl.imageUrl]] : bl.type === "image" || bl.type === "mockup" ? [[`Imagem do bloco "${bl.type}"`, bl.url]] : [],
+    ),
+  ];
+  for (const [label, url] of images) {
+    const problem = imageUrlProblem(url, checkout);
+    if (problem) issues.push(`${label}: o link ${problem}. Use o endereço direto de uma imagem ou deixe o campo vazio.`);
+  }
   return issues;
 }
