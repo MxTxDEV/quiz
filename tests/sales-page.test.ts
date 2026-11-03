@@ -7,13 +7,13 @@ import { builtinTemplates } from "@/lib/templates/builtin";
 const rota = () => structuredClone(builtinTemplates.find((t) => t.key === "rota-invisivel")!.config) as CampaignConfig;
 
 const answersFor = (pref: string, extra: Record<string, string> = {}) => ({
-  objetivo: "objetivo_1000_2000",
-  tempo: "tempo_ate_1h",
-  capital: "capital_ate_50",
-  preferencia: `preferencia_${pref}`,
+  situacao: "situacao_sobra_pouco",
   dificuldade: "dificuldade_por_onde_comecar",
-  onde: "onde_ambos",
-  experiencia: "no",
+  dor: "dor_planos",
+  objetivo: "objetivo_500_1000",
+  conquista: "conquista_tranquilidade",
+  preferencia: `preferencia_${pref}`,
+  tempo: "tempo_1_3h",
   ...extra,
 });
 
@@ -39,27 +39,32 @@ describe("bloco personalizado da página de vendas", () => {
   it("rótulos vêm das respostas reais; perguntas não respondidas são omitidas", () => {
     const c = rota();
     const a = answersFor("vendas");
-    expect(answerLabel(c.quiz, a, "capital")).toBe("Até R$ 50");
-    expect(answerLabel(c.quiz, a, "tempo")).toBe("Até 1 hora");
-    expect(answerLabel(c.quiz, { ...a, capital: undefined as unknown as string }, "capital")).toBeNull();
+    expect(answerLabel(c.quiz, a, "tempo")).toBe("De 1 a 3 horas.");
+    expect(answerLabel(c.quiz, { ...a, tempo: undefined as unknown as string }, "tempo")).toBeNull();
     expect(answerLabel(c.quiz, a, "inexistente")).toBeNull();
   });
 
   it.each([
-    ["vendas", "vendedor", "Vender sem montar estoque"],
-    ["servicos", "servicos_locais", "Transformar habilidades em serviços"],
-    ["internet", "servicos_digitais", "Trabalhar pela internet com ferramentas gratuitas"],
-    ["conteudo", "conteudo", "Do conteúdo à monetização"],
-    ["indefinido", "iniciante", "Comparar antes de escolher"],
-  ])("preferência %s → perfil %s com interpretação coerente", (pref, profileId, insight) => {
+    ["vendas", {}, "Vendas sem manter estoque"],
+    ["servicos", { dificuldade: "dificuldade_clientes" }, "Transformar habilidades em serviços"],
+    ["internet", { dificuldade: "dificuldade_clientes" }, "Renda pela internet com ferramentas gratuitas"],
+    ["indefinido", {}, "Escolher seu primeiro caminho"],
+  ])("preferência %s → texto coerente com o conteúdo do guia", (pref, extra, insight) => {
     const c = rota();
-    const a = answersFor(pref);
+    const a = answersFor(pref, extra as Record<string, string>);
     const r = resolveProfile(c, a);
-    expect(r.profile?.id).toBe(profileId);
     const titles = matchedInsights(personalized(c), { quiz: c.quiz, answers: a, attributes: r.attributes, score: r.score }).map((i) => i.title);
-    expect(titles[0]).toBe(insight);
-    expect(titles).toContain("Começar com pouco investimento"); // capital até R$ 50
+    expect(titles).toContain(insight);
     expect(titles.length).toBeLessThanOrEqual(3);
+  });
+
+  it("pouco tempo e 'já tentei' ganham textos próprios", () => {
+    const c = rota();
+    const a = answersFor("vendas", { tempo: "tempo_ate_1h", dificuldade: "dificuldade_ja_tentou" });
+    const r = resolveProfile(c, a);
+    const titles = matchedInsights(personalized(c), { quiz: c.quiz, answers: a, attributes: r.attributes, score: r.score }).map((i) => i.title);
+    expect(titles[0]).toBe("Estruturar a execução desta vez");
+    expect(titles).toContain("Alternativas para uma rotina com pouco tempo");
   });
 
   it("modelo não inventa garantia, preço anterior nem depoimentos; checkout e preço preservados", () => {

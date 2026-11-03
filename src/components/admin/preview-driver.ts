@@ -23,6 +23,7 @@ export function createPreviewDriver(config: CampaignConfig, onResolve?: (info: {
         profile: r.profile ? toPublicProfile(r.profile) : null,
         ctaHref: "#preview-oferta",
         reasons: r.reasons,
+        reality: r.reality,
       };
     },
     async resultViewed() {},

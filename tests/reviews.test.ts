@@ -85,7 +85,8 @@ describe("atualizar campanha existente com o modelo", () => {
     expect(after.offer.checkoutUrl).toBe("https://pay.kiwify.com.br/OUTRO");
     expect(after.offer.priceCents).toBe(2490);
     expect(after.tracking.metaPixelId).toBe("1417167073768708");
-    expect(after.profiles).toHaveLength(7);
+    expect(after.profiles).toHaveLength(6);
+    expect(after.scoring.mode).toBe("points");
     expect(after.quiz.result.reasons.length).toBeGreaterThan(5);
     expect(after.salesPage.blocks.some((b) => b.type === "preview")).toBe(true);
     // versão publicada não muda até publicar

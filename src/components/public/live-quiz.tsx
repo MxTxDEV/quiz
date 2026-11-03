@@ -33,8 +33,19 @@ function visitorId(): string {
 /** Driver real: cria a sessão (page_view) e serializa as chamadas para preservar a ordem. */
 function createLiveDriver(campaignId: string): QuizDriver & { init(): void } {
   let session: Promise<string> | null = null;
+  const key = `fos_sid_${campaignId}`;
   const init = () => {
     if (session) return session;
+    // mesma aba, quiz em andamento: reaproveita a sessão (recarregar a página não cria outra visita)
+    try {
+      const saved = sessionStorage.getItem(key);
+      if (saved && /^[0-9a-f-]{36}$/.test(saved) && sessionStorage.getItem(`fos_quiz_${campaignId}`)) {
+        session = Promise.resolve(saved);
+        return session;
+      }
+    } catch {
+      // ignora
+    }
     const params: Record<string, string> = {};
     new URLSearchParams(location.search).forEach((v, k) => {
       if (/^(utm_|fbclid$|gclid$|ttclid$)/.test(k)) params[k] = v.slice(0, 500);
@@ -44,7 +55,14 @@ function createLiveDriver(campaignId: string): QuizDriver & { init(): void } {
       visitorId: visitorId(),
       params,
       referrer: document.referrer || null,
-    }).then((r) => r.sessionId);
+    }).then((r) => {
+      try {
+        sessionStorage.setItem(key, r.sessionId);
+      } catch {
+        // ignora
+      }
+      return r.sessionId;
+    });
     return session;
   };
 
@@ -69,5 +87,5 @@ function createLiveDriver(campaignId: string): QuizDriver & { init(): void } {
 export function LiveQuiz({ campaign }: { campaign: PublicCampaign }) {
   const driver = useMemo(() => createLiveDriver(campaign.id), [campaign.id]);
   useEffect(() => driver.init(), [driver]);
-  return <QuizRunner campaign={campaign} driver={driver} />;
+  return <QuizRunner campaign={campaign} driver={driver} persistKey={`fos_quiz_${campaign.id}`} />;
 }

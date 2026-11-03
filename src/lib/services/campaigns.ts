@@ -230,6 +230,7 @@ export async function applyBuiltinTemplate(id: string, key: string) {
     quiz: t.quiz,
     profiles: t.profiles,
     rules: t.rules,
+    scoring: t.scoring,
     salesPage: { ...t.salesPage, brand: { ...t.salesPage.brand, logoUrl: current.config.salesPage.brand.logoUrl || t.salesPage.brand.logoUrl } },
     offer: {
       ...t.offer,

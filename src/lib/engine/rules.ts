@@ -97,7 +97,39 @@ export type Resolution = {
   tags: string[];
   /** justificativas do resultado, tiradas das respostas reais (ver quiz.result.reasons) */
   reasons: string[];
+  /** "Sua realidade": resumo das respostas (quiz.result.reality) */
+  reality: string[];
+  /** modo pontuação: total de cada perfil (para auditoria e testes) */
+  points: Record<string, number>;
 };
+
+/** Frases de resumo ("Sua realidade"), na ordem configurada. */
+export function resultReality(config: CampaignConfig, ctx: EvaluationContext): string[] {
+  const r = config.quiz.result;
+  return r.reality.filter((x) => x.text.trim() && evaluateGroup(x.when, ctx)).slice(0, r.maxReality).map((x) => x.text);
+}
+
+/**
+ * Modo pontuação: cada resposta soma pontos a um ou mais perfis (option.points).
+ * Vence o maior total. Empate → o primeiro perfil na lista `scoring.tieBreak`
+ * (perfis fora da lista vêm depois, na ordem em que foram cadastrados).
+ */
+export function scoreProfiles(config: CampaignConfig, answers: Answers) {
+  const points: Record<string, number> = Object.fromEntries(config.profiles.map((p) => [p.id, 0]));
+  for (const q of config.quiz.questions) {
+    const a = answers[q.id];
+    if (a === undefined || a === null) continue;
+    for (const optId of Array.isArray(a) ? a : [String(a)]) {
+      const opt = q.options.find((o) => o.id === optId);
+      if (!opt) continue;
+      for (const [pid, n] of Object.entries(opt.points)) if (pid in points) points[pid] += n;
+    }
+  }
+  const order = [...config.scoring.tieBreak.filter((id) => id in points), ...config.profiles.map((p) => p.id).filter((id) => !config.scoring.tieBreak.includes(id))];
+  let best: string | null = null;
+  for (const id of order) if (best === null || points[id] > points[best]) best = id;
+  return { points, winner: best };
+}
 
 /** Frases de "por que combina com você": as primeiras cuja condição bate com as respostas. */
 export function resultReasons(config: CampaignConfig, ctx: EvaluationContext): string[] {
@@ -113,13 +145,20 @@ export function resolveProfile(config: CampaignConfig, answers: Answers): Resolu
   const { attributes, score, tags } = deriveAttributes(config.quiz, answers);
   const ctx: EvaluationContext = { answers, attributes, score };
   const byId = new Map(config.profiles.map((p) => [p.id, p]));
+  const extras = () => ({ reasons: resultReasons(config, ctx), reality: resultReality(config, ctx) });
+
+  if (config.scoring.mode === "points") {
+    const { points, winner } = scoreProfiles(config, answers);
+    const profile = (winner && byId.get(winner)) || config.profiles.find((p) => p.isDefault) || config.profiles[0] || null;
+    return { profile, matchedRuleId: null, attributes, score, tags, points, ...extras() };
+  }
 
   for (const rule of config.rules) {
     if (!rule.enabled) continue;
     const profile = byId.get(rule.profileId);
     if (!profile) continue;
-    if (evaluateGroup(rule.when, ctx)) return { profile, matchedRuleId: rule.id, attributes, score, tags, reasons: resultReasons(config, ctx) };
+    if (evaluateGroup(rule.when, ctx)) return { profile, matchedRuleId: rule.id, attributes, score, tags, points: {}, ...extras() };
   }
   const fallback = config.profiles.find((p) => p.isDefault) ?? config.profiles[0] ?? null;
-  return { profile: fallback, matchedRuleId: null, attributes, score, tags, reasons: resultReasons(config, ctx) };
+  return { profile: fallback, matchedRuleId: null, attributes, score, tags, points: {}, ...extras() };
 }

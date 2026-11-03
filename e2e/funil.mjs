@@ -6,9 +6,9 @@ const { chromium, devices } = createRequire(import.meta.url)("playwright");
 const [base = "http://localhost:3100", slug = "fx-demo", shots] = process.argv.slice(2);
 
 const PERFIS = [
-  { nome: "sem investir + internet", resp: ["Até R$ 500", "Até 1 hora", "Quero começar sem investir", "Trabalhar pela internet", "Não sei como conseguir clientes", "Pela internet", "Não, estou começando do zero"], perfil: "Prestador de serviços digitais" },
-  { nome: "vender na região com capital", resp: ["De R$ 1.000 a R$ 2.000", "Mais de 3 horas", "De R$ 50 a R$ 300", "Vender produtos", "Não sei por onde começar", "Na minha cidade ou região", "Sim, já tive alguma experiência"], perfil: "Empreendedor do bairro" },
-  { nome: "indeciso sem dinheiro", resp: ["Até R$ 500", "De 1 a 3 horas", "Até R$ 50", "Ainda não sei. Quero descobrir.", "Tenho pouco dinheiro", "Tanto faz. Quero a melhor oportunidade.", "Não, estou começando do zero"], perfil: "Iniciante com pouco capital" },
+  { nome: "sem dinheiro + serviços", resp: ["Meu dinheiro acaba antes do fim do mês.", "Não tenho dinheiro para investir.", "Não conseguir realizar meus planos.", "Até R$ 500 por mês.", "Quitar minhas dívidas.", "Prestar serviços.", "De 1 a 3 horas."], perfil: "Iniciante com pouco investimento" },
+  { nome: "vendas com tempo", resp: ["Preciso encontrar uma nova fonte de renda.", "Não sei como encontrar clientes.", "Não conseguir realizar meus planos.", "De R$ 500 a R$ 1.000.", "Ter dinheiro para realizar meus planos.", "Vender produtos sem precisar manter estoque.", "Mais de 3 horas."], perfil: "Perfil comercial e de vendas" },
+  { nome: "pouco tempo", resp: ["Consigo pagar minhas contas, mas sobra pouco.", "Não tenho tempo disponível.", "Trabalhar muito e continuar sem dinheiro.", "Até R$ 500 por mês.", "Ter mais tranquilidade financeira.", "Trabalhar pela internet.", "Até 1 hora."], perfil: "Pouco tempo disponível" },
 ];
 
 const b = await chromium.launch();
@@ -30,18 +30,39 @@ for (const [i, caso] of PERFIS.entries()) {
   ok(await p.getByText("Você quer ganhar dinheiro extra").count() > 0, "abertura com a nova headline");
   if (i === 0 && shots) await p.screenshot({ path: `${shots}/e2e-intro.png` });
   await p.getByRole("button", { name: /descobrir meu caminho/i }).click();
-  for (const r of caso.resp) {
+  for (const [k, r] of caso.resp.entries()) {
+    if (k === 0) ok(await p.getByText("Etapa 1 de 4 — Conhecendo você").count() === 1, "etapa 1 de 4 visível");
+    if (k === 5) ok(await p.getByText("Etapa 4 de 4 — Encontrando seu caminho").count() === 1, "etapa 4 de 4 visível");
     await p.getByRole("radio", { name: r, exact: true }).first().click();
     await p.waitForTimeout(450);
+    if (i === 0 && k === 2) {
+      // voltar preserva a resposta anterior
+      await p.getByRole("button", { name: "Voltar" }).click();
+      await p.waitForTimeout(300);
+      ok((await p.getByRole("radio", { name: caso.resp[2], exact: true }).getAttribute("aria-checked")) === "true", "voltar mantém a resposta marcada");
+      await p.getByRole("radio", { name: caso.resp[2], exact: true }).click();
+      await p.waitForTimeout(450);
+    }
+    if (i === 0 && k === 3) {
+      // recarregar no meio do quiz retoma da mesma pergunta, com a mesma sessão
+      const sid = await p.evaluate(() => Object.entries(sessionStorage).find(([key]) => key.startsWith("fos_sid_"))?.[1]);
+      await p.reload({ waitUntil: "load" });
+      await p.waitForTimeout(900);
+      ok(await p.getByText("O que você gostaria de conquistar").count() === 1, "recarregar a página retoma na pergunta 5");
+      const sid2 = await p.evaluate(() => Object.entries(sessionStorage).find(([key]) => key.startsWith("fos_sid_"))?.[1]);
+      ok(!!sid && sid === sid2, "mesma sessão depois de recarregar");
+    }
   }
+  ok(await p.getByText("Identificando oportunidades compatíveis com seu perfil...").count() === 1, "transição de análise em etapas");
   await p.getByText("Análise concluída", { exact: false }).first().waitFor({ timeout: 15000 });
   await p.waitForTimeout(1600); // deixa o Pixel atrasado aparecer
   const perfil = await p.locator("h1").first().textContent();
   ok(perfil?.trim() === caso.perfil, `perfil coerente: ${perfil?.trim()}`);
-  ok(await p.getByText("Por que esse perfil combina com você").count() === 1, "justificativas exibidas");
+  ok(await p.getByText("Sua realidade", { exact: true }).count() === 1, "seção Sua realidade");
+  ok(await p.getByText("Por que esse caminho?").count() === 1, "seção Por que esse caminho?");
   ok(await p.getByText("1º passo:").count() === 3, "3 caminhos com primeiro passo");
   if (shots) await p.screenshot({ path: `${shots}/e2e-resultado-${i}.png`, fullPage: true });
-  await p.getByRole("link", { name: /quero conhecer meu plano de ação/i }).click();
+  await p.getByRole("link", { name: /quero conhecer o rota invisível/i }).click();
   await p.waitForURL(/\/oferta\?s=/, { timeout: 20000 });
   await p.waitForLoadState("load");
   await p.waitForTimeout(1800);
@@ -81,10 +102,10 @@ await p.route("**/api/public/checkout**", (r) => r.fulfill({ status: 200, body: 
 await p.goto(`${base}/q/${slug}`, { waitUntil: "networkidle" });
 await p.getByRole("button", { name: /descobrir meu caminho/i }).click();
 await p.getByRole("button", { name: /descobrir meu caminho/i }).click().catch(() => {}); // clique duplo não pode duplicar
-for (const r of PERFIS[0].resp) { await p.getByRole("radio", { name: r, exact: true }).first().click(); await p.waitForTimeout(400); }
+for (const r of PERFIS[1].resp) { await p.getByRole("radio", { name: r, exact: true }).first().click(); await p.waitForTimeout(400); }
 await p.getByText("Análise concluída").first().waitFor({ timeout: 15000 });
 await p.waitForTimeout(1700);
-await p.getByRole("link", { name: /quero conhecer meu plano de ação/i }).click();
+await p.getByRole("link", { name: /quero conhecer o rota invisível/i }).click();
 await p.waitForURL(/\/oferta\?s=/); await p.waitForLoadState("load"); await p.waitForTimeout(1900);
 await p.locator("[data-offer]").scrollIntoViewIfNeeded(); await p.waitForTimeout(900);
 const buy = p.locator("a[data-purchase]").first();

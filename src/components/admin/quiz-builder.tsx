@@ -403,6 +403,22 @@ function OptionRow({
           <Button type="button" variant="outline" size="xs" onClick={() => setAttrs([...attrs, [`atributo_${attrs.length + 1}`, ""]])}>
             <Plus /> Atributo
           </Button>
+          <Field label="Pontos por perfil (modo pontuação)" hint="Formato: id_do_perfil=pontos, separados por vírgula. Ex.: iniciante=3, pouco_tempo=1">
+            <Input
+              key={JSON.stringify(o.points)}
+              defaultValue={Object.entries(o.points).map(([k, v]) => `${k}=${v}`).join(", ")}
+              className="h-8 font-mono text-xs"
+              placeholder="iniciante=3, pouco_tempo=1"
+              onBlur={(e) => {
+                const points: Record<string, number> = {};
+                for (const part of e.target.value.split(",")) {
+                  const [k, v] = part.split("=").map((x) => x.trim());
+                  if (k && v && Number.isFinite(Number(v))) points[k.slice(0, 64)] = Math.max(-100, Math.min(100, Number(v)));
+                }
+                onChange({ points });
+              }}
+            />
+          </Field>
         </div>
       )}
     </div>

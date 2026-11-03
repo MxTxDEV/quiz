@@ -6,7 +6,7 @@ import { campaigns, leads, visitorSessions, type VisitorSession } from "@/lib/db
 import { parseConfig, type CampaignConfig } from "@/lib/domain/config";
 import { toPublicProfile, type PublicProfile } from "@/lib/domain/public";
 import { normalizeAnswer, type Answers, type Attributes } from "@/lib/engine/answers";
-import { resolveProfile, resultReasons } from "@/lib/engine/rules";
+import { resolveProfile, resultReality, resultReasons } from "@/lib/engine/rules";
 import { classifySource, detectDevice, pickUtm } from "@/lib/tracking/context";
 import { buildCheckoutUrl } from "@/lib/tracking/checkout";
 import { recordEvent, recordEventOnce } from "./events";
@@ -106,7 +106,7 @@ export async function submitAnswer(sessionId: string, questionId: string, raw: u
   return { ok: true };
 }
 
-export type CompletionResult = { profile: PublicProfile | null; ctaHref: string; reasons: string[] };
+export type CompletionResult = { profile: PublicProfile | null; ctaHref: string; reasons: string[]; reality: string[] };
 
 function ctaHref(slug: string, sessionId: string, profile: { ctaTarget: string } | null) {
   return profile?.ctaTarget === "checkout"
@@ -121,8 +121,8 @@ export async function completeQuiz(sessionId: string): Promise<CompletionResult>
 
   if (session.completedAt) {
     const profile = config.profiles.find((p) => p.id === session.profileId) ?? null;
-    const reasons = resultReasons(config, { answers: session.answers as Answers, attributes: session.attributes as Attributes, score: session.score });
-    return { profile: profile && toPublicProfile(profile), ctaHref: ctaHref(c.slug, session.id, profile), reasons };
+    const ctx = { answers: session.answers as Answers, attributes: session.attributes as Attributes, score: session.score };
+    return { profile: profile && toPublicProfile(profile), ctaHref: ctaHref(c.slug, session.id, profile), reasons: resultReasons(config, ctx), reality: resultReality(config, ctx) };
   }
 
   const answers = session.answers as Answers;
@@ -143,9 +143,9 @@ export async function completeQuiz(sessionId: string): Promise<CompletionResult>
   if (updated.length)
     await recordEvent(session, "quiz_completed", {
       profileId: result.profile?.id ?? null,
-      metadata: { matchedRuleId: result.matchedRuleId },
+      metadata: { matchedRuleId: result.matchedRuleId, points: result.points },
     });
-  return { profile: result.profile && toPublicProfile(result.profile), ctaHref: ctaHref(c.slug, session.id, result.profile), reasons: result.reasons };
+  return { profile: result.profile && toPublicProfile(result.profile), ctaHref: ctaHref(c.slug, session.id, result.profile), reasons: result.reasons, reality: result.reality };
 }
 
 export async function markResultViewed(sessionId: string) {

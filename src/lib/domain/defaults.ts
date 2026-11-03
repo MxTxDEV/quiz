@@ -13,7 +13,7 @@ import {
 import type { Product } from "@/lib/db/schema";
 
 export function newOption(label = "Nova opção") {
-  return { id: uid("o"), label, value: "", score: 0, attributes: {}, tags: [] };
+  return { id: uid("o"), label, value: "", score: 0, attributes: {}, tags: [], points: {} };
 }
 
 export function newQuestion(type: QuestionType): Question {
@@ -24,6 +24,7 @@ export function newQuestion(type: QuestionType): Question {
     description: "",
     imageUrl: "",
     required: true,
+    stage: "",
     attributeKey: "",
     options: [],
     maxSelections: 0,
@@ -38,8 +39,8 @@ export function newQuestion(type: QuestionType): Question {
   if (type === "single" || type === "multiple") base.options = [newOption("Opção 1"), newOption("Opção 2")];
   if (type === "yes_no")
     base.options = [
-      { id: "yes", label: "Sim", value: "sim", score: 0, attributes: {}, tags: [] },
-      { id: "no", label: "Não", value: "nao", score: 0, attributes: {}, tags: [] },
+      { id: "yes", label: "Sim", value: "sim", score: 0, attributes: {}, tags: [], points: {} },
+      { id: "no", label: "Não", value: "nao", score: 0, attributes: {}, tags: [], points: {} },
     ];
   if (type === "text") base.placeholder = "Digite sua resposta";
   if (type === "number") base.placeholder = "0";

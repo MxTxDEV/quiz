@@ -59,6 +59,8 @@ export const optionSchema = z.object({
   /** atributos extras: { objetivo_financeiro: "1000_2000" } */
   attributes: z.record(attributeKeySchema, z.string().max(120)).default({}),
   tags: z.array(z.string().max(60)).max(20).default([]),
+  /** pontos que esta resposta soma a cada perfil (modo pontuação): { iniciante: 3, pouco_tempo: 1 } */
+  points: z.record(z.string().max(64), z.number().min(-100).max(100)).default({}),
 });
 export type QuizOption = z.infer<typeof optionSchema>;
 
@@ -69,6 +71,8 @@ export const questionSchema = z.object({
   description: z.string().max(1000).default(""),
   imageUrl: url.default(""),
   required: z.boolean().default(true),
+  /** rótulo da etapa exibido acima da pergunta (ex.: "Etapa 2 de 4 — Entendendo sua realidade") */
+  stage: z.string().max(80).default(""),
   /** atributo onde a resposta será registrada (ex.: tempo_disponivel) */
   attributeKey: attributeKeySchema.default(""),
   options: z.array(optionSchema).max(30).default([]),
@@ -102,6 +106,10 @@ export const quizSchema = z.object({
     .object({
       eyebrow: z.string().max(60).default("Análise concluída"),
       headline: shortText.default("Encontramos caminhos que podem combinar com sua realidade."),
+      /** "Sua realidade": resumo das respostas (aparecem as primeiras `maxReality` que batem) */
+      realityTitle: shortText.default("Sua realidade"),
+      reality: z.array(z.lazy(() => reasonSchema)).max(40).default([]),
+      maxReality: z.number().int().min(1).max(6).default(4),
       reasonsTitle: shortText.default("Por que esse perfil combina com você"),
       /** frases exibidas quando a condição bate; aparecem as primeiras `maxReasons` */
       reasons: z.array(z.lazy(() => reasonSchema)).max(40).default([]),
@@ -111,15 +119,17 @@ export const quizSchema = z.object({
       transitionTitle: shortText.default(""),
       transitionText: z.string().max(600).default(""),
     })
-    .default({ eyebrow: "Análise concluída", headline: "Encontramos caminhos que podem combinar com sua realidade.", reasonsTitle: "Por que esse perfil combina com você", reasons: [], maxReasons: 3, pathsTitle: "Caminhos recomendados para você", firstStepTitle: "Seu primeiro passo prático", transitionTitle: "", transitionText: "" }),
+    .default({ eyebrow: "Análise concluída", headline: "Encontramos caminhos que podem combinar com sua realidade.", realityTitle: "Sua realidade", reality: [], maxReality: 4, reasonsTitle: "Por que esse perfil combina com você", reasons: [], maxReasons: 3, pathsTitle: "Caminhos recomendados para você", firstStepTitle: "Seu primeiro passo prático", transitionTitle: "", transitionText: "" }),
   settings: z
     .object({
       showProgress: z.boolean().default(true),
       allowBack: z.boolean().default(true),
       autoAdvance: z.boolean().default(true),
       transitionMessage: z.string().max(200).default("Analisando suas respostas..."),
+      /** mensagens exibidas em sequência durante a análise (vazio = só transitionMessage) */
+      transitionSteps: z.array(z.string().max(120)).max(6).default([]),
     })
-    .default({ showProgress: true, allowBack: true, autoAdvance: true, transitionMessage: "Analisando suas respostas..." }),
+    .default({ showProgress: true, allowBack: true, autoAdvance: true, transitionMessage: "Analisando suas respostas...", transitionSteps: [] }),
 });
 export type Quiz = z.infer<typeof quizSchema>;
 
@@ -443,6 +453,13 @@ export const campaignConfigSchema = z.object({
   quiz: quizSchema.default(quizSchema.parse({})),
   profiles: z.array(profileSchema).max(50).default([]),
   rules: z.array(ruleSchema).max(100).default([]),
+  /**
+   * Modo de classificação. "rules" = a primeira regra atendida define o perfil.
+   * "points" = soma os pontos de cada resposta por perfil; vence o maior total; empate → ordem de `tieBreak`.
+   */
+  scoring: z
+    .object({ mode: z.enum(["rules", "points"]).default("rules"), tieBreak: z.array(z.string().max(64)).max(50).default([]) })
+    .default({ mode: "rules", tieBreak: [] }),
   offer: offerSchema.default(offerSchema.parse({})),
   salesPage: salesPageSchema.default(salesPageSchema.parse({})),
   leadCapture: leadCaptureSchema.default(leadCaptureSchema.parse({})),

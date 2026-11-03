@@ -8,7 +8,7 @@ import { trackThirdParty } from "./pixel";
 
 export type AnswerInput = string | string[] | number | null;
 export type LeadInput = { name: string; email: string; consent: boolean };
-export type Completion = { profile: PublicProfile | null; ctaHref: string; reasons?: string[] };
+export type Completion = { profile: PublicProfile | null; ctaHref: string; reasons?: string[]; reality?: string[] };
 
 /** Abstração de I/O: o quiz publicado fala com a API; o preview do editor resolve localmente. */
 export interface QuizDriver {
@@ -34,11 +34,14 @@ export function QuizRunner({
   driver,
   initialStep,
   embedded = false,
+  persistKey,
 }: {
   campaign: PublicCampaign;
   driver: QuizDriver;
   initialStep?: Step;
   embedded?: boolean;
+  /** quando definido, o progresso fica salvo na aba: recarregar a página retoma de onde parou */
+  persistKey?: string;
 }) {
   const { quiz, leadCapture } = campaign;
   const questions = quiz.questions;
@@ -51,6 +54,30 @@ export function QuizRunner({
   useEffect(() => {
     if (initialStep) setStep(initialStep);
   }, [initialStep]);
+
+  // retomar após recarregar a página (respostas + pergunta atual), sem duplicar o início do quiz
+  useEffect(() => {
+    if (!persistKey) return;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(persistKey) || "null") as { answers: Record<string, AnswerInput>; index: number } | null;
+      if (saved && saved.index >= 0 && saved.index < questions.length) {
+        started.current = true;
+        setAnswers(saved.answers || {});
+        setStep({ kind: "question", index: saved.index });
+      }
+    } catch {
+      // sem sessionStorage: começa do zero
+    }
+  }, [persistKey, questions.length]);
+  useEffect(() => {
+    if (!persistKey) return;
+    try {
+      if (step.kind === "question") sessionStorage.setItem(persistKey, JSON.stringify({ answers, index: step.index }));
+      else if (step.kind === "result") sessionStorage.removeItem(persistKey);
+    } catch {
+      // ignora
+    }
+  }, [persistKey, step, answers]);
 
   const begin = useCallback(() => {
     if (!started.current) {
@@ -66,7 +93,8 @@ export function QuizRunner({
 
   const finish = useCallback(async () => {
     setStep({ kind: "analyzing" });
-    const minDelay = new Promise((r) => setTimeout(r, 900));
+    const steps = quiz.settings.transitionSteps.length;
+    const minDelay = new Promise((r) => setTimeout(r, steps ? Math.min(2700, steps * 850) : 900));
     try {
       const [result] = await Promise.all([driver.complete(), minDelay]);
       setCompletion(result);
@@ -76,7 +104,7 @@ export function QuizRunner({
     } catch (e) {
       setStep({ kind: "error", message: e instanceof Error ? e.message : "Não foi possível calcular o resultado." });
     }
-  }, [driver]);
+  }, [driver, quiz.settings.transitionSteps.length]);
 
   const next = useCallback(
     (index: number) => {
@@ -133,6 +161,11 @@ export function QuizRunner({
               }}
             />
           )}
+          {step.kind === "question" && questions[step.index]?.stage && (
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] animate-fade-in" style={{ color: "var(--q-accent)" }}>
+              {questions[step.index].stage}
+            </p>
+          )}
           {step.kind === "question" && questions[step.index] && (
             <QuestionView
               question={questions[step.index]}
@@ -153,12 +186,15 @@ export function QuizRunner({
               onSkip={leadCapture.required ? undefined : () => (step.after === "before_result" ? void finish() : setLeadDone(true))}
             />
           )}
-          {step.kind === "analyzing" && (
-            <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center animate-fade-in">
-              <Loader2 className="size-8 animate-spin" style={{ color: "var(--q-accent)" }} />
-              <p className="text-lg font-medium">{quiz.settings.transitionMessage || "Analisando suas respostas..."}</p>
-            </div>
-          )}
+          {step.kind === "analyzing" &&
+            (quiz.settings.transitionSteps.length ? (
+              <AnalyzingSteps steps={quiz.settings.transitionSteps} />
+            ) : (
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center animate-fade-in">
+                <Loader2 className="size-8 animate-spin" style={{ color: "var(--q-accent)" }} />
+                <p className="text-lg font-medium">{quiz.settings.transitionMessage || "Analisando suas respostas..."}</p>
+              </div>
+            ))}
           {step.kind === "result" && completion && (
             <ResultView
               completion={completion}
@@ -212,7 +248,7 @@ function PrimaryButton({ children, className = "", ...props }: React.ComponentPr
 function Intro({ campaign, onStart }: { campaign: PublicCampaign; onStart: () => void }) {
   const { intro } = campaign.quiz;
   const n = campaign.quiz.questions.length;
-  const chips = ["Seu tempo", "Seu orçamento", "Suas habilidades"];
+  const chips = ["Sua realidade", "Seus objetivos", "Seu tempo"];
   return (
     <div className="flex flex-1 flex-col justify-center gap-6 animate-slide-up">
       {intro.imageUrl && (
@@ -237,7 +273,7 @@ function Intro({ campaign, onStart }: { campaign: PublicCampaign; onStart: () =>
         <span className="inline-flex items-center justify-center gap-2 uppercase tracking-wide">{intro.ctaLabel || "Começar"} <ArrowRight className="size-4" /></span>
       </PrimaryButton>
       <p className="text-center text-[0.85em]" style={{ color: "var(--q-muted)" }}>
-        São apenas {n} perguntas rápidas. Leva menos de 2 minutos.
+        Responda {n} perguntas rápidas e descubra caminhos que fazem sentido para você.
       </p>
       {intro.disclaimer && <p className="text-center text-[11px] leading-relaxed" style={{ color: "var(--q-muted)" }}>{intro.disclaimer}</p>}
     </div>
@@ -488,6 +524,29 @@ function Paragraphs({ text }: { text: string }) {
   );
 }
 
+/** Transição de análise: cada etapa aparece em sequência e é marcada como concluída (sem simular IA). */
+function AnalyzingSteps({ steps }: { steps: string[] }) {
+  const [done, setDone] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setDone((d) => Math.min(d + 1, steps.length)), 800);
+    return () => clearInterval(t);
+  }, [steps.length]);
+  return (
+    <div className="flex flex-1 flex-col justify-center gap-4 animate-fade-in">
+      {steps.map((m, i) => (
+        <div key={i} className="flex items-center gap-3 transition-opacity duration-300" style={{ opacity: i <= done ? 1 : 0.25 }}>
+          {i < done ? (
+            <span className="grid size-6 shrink-0 place-items-center rounded-full" style={{ background: "var(--q-accent)", color: "var(--q-accent-text)" }}><Check className="size-3.5" strokeWidth={3} /></span>
+          ) : (
+            <Loader2 className={`size-6 shrink-0 ${i === done ? "animate-spin" : ""}`} style={{ color: "var(--q-accent)" }} />
+          )}
+          <p className="text-[1.02em] font-semibold">{m}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ResultView({
   completion,
   page,
@@ -505,6 +564,7 @@ function ResultView({
   const surface = { background: "var(--q-surface)" };
   const hair = "color-mix(in srgb, var(--q-text) 10%, transparent)";
   const reasons = completion.reasons?.length ? completion.reasons : p.highlights;
+  const reality = completion.reality ?? [];
   const paths = p.paths ?? [];
   return (
     <div className="space-y-7 pb-4 animate-slide-up">
@@ -525,21 +585,38 @@ function ResultView({
           <img src={p.imageUrl} alt="" className="mt-3 w-full rounded-[var(--q-radius)] object-cover max-h-60" />
         )}
         {p.title && <p className="mt-3 text-[1.08em] font-bold leading-snug">{p.title}</p>}
-        {(p.subtitle || p.description) && <p className="mt-2 text-[0.95em] leading-relaxed" style={{ color: "var(--q-muted)" }}>{p.subtitle || p.description}</p>}
       </div>
 
-      {/* 3 · por que combina (respostas reais) */}
-      {reasons.length > 0 && (
+      {/* 2 · sua realidade (resumo das respostas) */}
+      {reality.length > 0 && (
         <div className="rounded-[var(--q-radius)] p-5" style={surface}>
-          <p className="mb-3 text-[0.95em] font-bold">{page?.reasonsTitle || "O que suas respostas indicam"}</p>
+          <p className="mb-3 text-[0.95em] font-bold">{page?.realityTitle || "Sua realidade"}</p>
           <ul className="space-y-2.5">
-            {reasons.map((r, i) => (
+            {reality.map((r, i) => (
               <li key={i} className="flex gap-2.5 text-[0.95em] leading-snug">
-                <Check className="mt-0.5 size-4 shrink-0" style={accent} strokeWidth={3} />
+                <span className="mt-1.5 size-2 shrink-0 rounded-full" style={{ background: "var(--q-accent)" }} />
                 {r}
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* 3 · por que esse caminho (relação entre respostas e recomendação) */}
+      {(p.subtitle || p.description || reasons.length > 0) && (
+        <div className="space-y-3">
+          <p className="text-[0.95em] font-bold">{page?.reasonsTitle || "Por que esse caminho?"}</p>
+          {(p.subtitle || p.description) && <p className="text-[0.95em] leading-relaxed" style={{ color: "var(--q-muted)" }}>{p.subtitle || p.description}</p>}
+          {reasons.length > 0 && (
+            <ul className="space-y-2.5">
+              {reasons.map((r, i) => (
+                <li key={i} className="flex gap-2.5 text-[0.95em] leading-snug">
+                  <Check className="mt-0.5 size-4 shrink-0" style={accent} strokeWidth={3} />
+                  {r}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 

@@ -13,7 +13,7 @@ export type PublicQuiz = {
   settings: Quiz["settings"];
   questions: PublicQuestion[];
   /** textos da página de resultado (as condições das justificativas ficam no servidor) */
-  result: Omit<Quiz["result"], "reasons">;
+  result: Omit<Quiz["result"], "reasons" | "reality">;
 };
 
 export type PublicProfile = Omit<Profile, "isDefault">;
@@ -32,9 +32,10 @@ export function toPublicQuiz(quiz: Quiz): PublicQuiz {
   return {
     intro: quiz.intro,
     settings: quiz.settings,
-    result: (({ reasons: _r, ...rest }) => rest)(quiz.result),
+    result: (({ reasons: _r, reality: _re, ...rest }) => rest)(quiz.result),
     questions: quiz.questions.map(({ options, attributeKey: _a, ...q }) => ({
       ...q,
+      // pontos, atributos e valores ficam no servidor
       options: options.map((o) => ({ id: o.id, label: o.label })),
     })),
   };
