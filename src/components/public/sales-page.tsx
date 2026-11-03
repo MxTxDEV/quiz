@@ -1,5 +1,5 @@
 import type React from "react";
-import { BadgeCheck, Briefcase, Check, ChevronDown, Gift, Laptop, Lock, ShieldCheck, Star, Store, TrendingUp, Users, Wallet } from "lucide-react";
+import { BadgeCheck, BookOpen, Briefcase, Check, ChevronDown, Gift, Laptop, Lock, ShieldCheck, Star, Store, TrendingUp, Users, Wallet, X } from "lucide-react";
 import type { Block, Brand, Offer, Quiz, SalesPage } from "@/lib/domain/config";
 import type { Answers, Attributes } from "@/lib/engine/answers";
 import { evaluateGroup } from "@/lib/engine/rules";
@@ -526,6 +526,70 @@ function renderBlock(b: Block, env: Env): React.ReactNode {
                 {bonus.description && <p className="mt-2 text-[0.8em] leading-relaxed sm:text-[0.9em]" style={muted}>{bonus.description}</p>}
               </div>
             ))}
+          </div>
+        </Container>
+      );
+    case "preview": {
+      const items = b.items.filter((it) => usableImageUrl(it.imageUrl));
+      if (items.length === 0) return null;
+      return (
+        <Container>
+          <div className="text-center">
+            {b.eyebrow && <Eyebrow center>{b.eyebrow}</Eyebrow>}
+            <H2 center>{b.title}</H2>
+            {b.subtitle && <p className="mx-auto mt-3 max-w-2xl leading-relaxed" style={muted}>{b.subtitle}</p>}
+          </div>
+          <div className="-mx-5 mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3 [scrollbar-width:none]">
+            {items.map((it, i) => (
+              <figure key={i} className="flex w-[86%] shrink-0 snap-center flex-col sm:w-auto">
+                <a
+                  href={it.imageUrl}
+                  target="_blank"
+                  rel="noopener"
+                  aria-label={`Ampliar trecho: ${it.title}`}
+                  className="relative block overflow-hidden rounded-[10px] bg-white shadow-[0_24px_60px_-20px_rgba(0,0,0,.8)]"
+                  style={{ border: "1px solid rgba(255,255,255,.12)" }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={it.imageUrl} alt={`Trecho do material: ${it.title}`} loading="lazy" decoding="async" className="block max-h-[460px] w-full object-cover object-top" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28" style={{ background: "linear-gradient(transparent, #fff 78%)" }} />
+                  <span className="absolute bottom-3 left-3 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.66em] font-extrabold uppercase tracking-[0.1em]" style={{ background: "var(--q-accent)", color: "var(--q-accent-text)" }}>
+                    <BookOpen className="size-3" /> Trecho real
+                  </span>
+                  <span className="absolute bottom-3.5 right-3 z-10 text-[0.68em] font-bold text-zinc-500">Toque para ampliar</span>
+                </a>
+                <figcaption className="mt-3 px-1">
+                  <b className="block text-[0.98em]">{it.title}</b>
+                  {it.caption && <span className="mt-1 block text-[0.88em] leading-relaxed" style={muted}>{it.caption}</span>}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          {b.note && <p className="mt-4 text-center text-[0.78em]" style={muted}>{b.note}</p>}
+        </Container>
+      );
+    }
+    case "fit":
+      return (
+        <Container size="md">
+          <H2 center>{b.title}</H2>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[var(--q-radius)] border p-5" style={{ borderColor: "color-mix(in srgb, var(--q-accent) 45%, transparent)", background: "color-mix(in srgb, var(--q-accent) 7%, var(--q-surface))" }}>
+              <p className="mb-3 font-extrabold">{b.yesTitle}</p>
+              <ul className="space-y-2.5">
+                {b.yes.map((it, i) => (
+                  <li key={i} className="flex gap-2.5 text-[0.95em] leading-snug"><Check className="mt-0.5 size-4 shrink-0" style={accent} strokeWidth={3} />{it}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-[var(--q-radius)] border p-5" style={{ borderColor: hairline, background: "var(--q-surface)" }}>
+              <p className="mb-3 font-extrabold">{b.noTitle}</p>
+              <ul className="space-y-2.5">
+                {b.no.map((it, i) => (
+                  <li key={i} className="flex gap-2.5 text-[0.95em] leading-snug" style={muted}><X className="mt-0.5 size-4 shrink-0" strokeWidth={3} />{it}</li>
+                ))}
+              </ul>
+            </div>
           </div>
         </Container>
       );

@@ -5,8 +5,8 @@ import { db } from "@/lib/db";
 import { campaigns, leads, visitorSessions, type VisitorSession } from "@/lib/db/schema";
 import { parseConfig, type CampaignConfig } from "@/lib/domain/config";
 import { toPublicProfile, type PublicProfile } from "@/lib/domain/public";
-import { normalizeAnswer, type Answers } from "@/lib/engine/answers";
-import { resolveProfile } from "@/lib/engine/rules";
+import { normalizeAnswer, type Answers, type Attributes } from "@/lib/engine/answers";
+import { resolveProfile, resultReasons } from "@/lib/engine/rules";
 import { classifySource, detectDevice, pickUtm } from "@/lib/tracking/context";
 import { buildCheckoutUrl } from "@/lib/tracking/checkout";
 import { recordEvent, recordEventOnce } from "./events";
@@ -106,7 +106,7 @@ export async function submitAnswer(sessionId: string, questionId: string, raw: u
   return { ok: true };
 }
 
-export type CompletionResult = { profile: PublicProfile | null; ctaHref: string };
+export type CompletionResult = { profile: PublicProfile | null; ctaHref: string; reasons: string[] };
 
 function ctaHref(slug: string, sessionId: string, profile: { ctaTarget: string } | null) {
   return profile?.ctaTarget === "checkout"
@@ -121,7 +121,8 @@ export async function completeQuiz(sessionId: string): Promise<CompletionResult>
 
   if (session.completedAt) {
     const profile = config.profiles.find((p) => p.id === session.profileId) ?? null;
-    return { profile: profile && toPublicProfile(profile), ctaHref: ctaHref(c.slug, session.id, profile) };
+    const reasons = resultReasons(config, { answers: session.answers as Answers, attributes: session.attributes as Attributes, score: session.score });
+    return { profile: profile && toPublicProfile(profile), ctaHref: ctaHref(c.slug, session.id, profile), reasons };
   }
 
   const answers = session.answers as Answers;
@@ -144,7 +145,7 @@ export async function completeQuiz(sessionId: string): Promise<CompletionResult>
       profileId: result.profile?.id ?? null,
       metadata: { matchedRuleId: result.matchedRuleId },
     });
-  return { profile: result.profile && toPublicProfile(result.profile), ctaHref: ctaHref(c.slug, session.id, result.profile) };
+  return { profile: result.profile && toPublicProfile(result.profile), ctaHref: ctaHref(c.slug, session.id, result.profile), reasons: result.reasons };
 }
 
 export async function markResultViewed(sessionId: string) {

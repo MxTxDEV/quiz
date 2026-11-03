@@ -208,3 +208,40 @@ export async function saveCampaignAsTemplate(id: string, input: { name: string; 
     .returning();
   return row;
 }
+
+
+/**
+ * Atualiza o RASCUNHO de uma campanha com a versão atual de um modelo embutido
+ * (quiz, perfis, regras, página de resultado, página de vendas e aparência).
+ * Preservados: checkout, preço, moeda, preço de referência, garantia, captura de leads e rastreamento (pixel).
+ * Nada vai ao ar até publicar.
+ */
+export async function applyBuiltinTemplate(id: string, key: string) {
+  const { builtinTemplates } = await import("@/lib/templates/builtin");
+  const tpl = builtinTemplates.find((t) => t.key === key);
+  if (!tpl) throw new Error("Modelo não encontrado.");
+  const current = await getCampaign(id);
+  if (!current) throw new Error("Campanha não encontrada.");
+  const t = structuredClone(tpl.config);
+  const keep = current.config.offer;
+  const config: CampaignConfig = {
+    ...current.config,
+    theme: t.theme,
+    quiz: t.quiz,
+    profiles: t.profiles,
+    rules: t.rules,
+    salesPage: { ...t.salesPage, brand: { ...t.salesPage.brand, logoUrl: current.config.salesPage.brand.logoUrl || t.salesPage.brand.logoUrl } },
+    offer: {
+      ...t.offer,
+      checkoutUrl: keep.checkoutUrl || t.offer.checkoutUrl,
+      priceCents: keep.priceCents || t.offer.priceCents,
+      currency: keep.currency,
+      referencePriceCents: keep.referencePriceCents,
+      referencePriceNote: keep.referencePriceNote,
+      guarantee: keep.guarantee,
+      guaranteeDays: keep.guaranteeDays,
+      coverImageUrl: keep.coverImageUrl,
+    },
+  };
+  return saveCampaignConfig(id, config);
+}

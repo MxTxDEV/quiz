@@ -54,9 +54,16 @@ export function SalesTracker({ sessionId, profile, value }: { sessionId: string 
     const onClick = (e: MouseEvent) => {
       const a = (e.target as HTMLElement).closest<HTMLAnchorElement>("a[data-purchase]");
       if (!a) return;
-      trackThirdParty("purchase_button_click", { profile, value });
+      trackThirdParty("purchase_button_click", { profile, value }); // → InitiateCheckout no Meta
       const blockId = new URL(a.href, location.href).searchParams.get("b") ?? undefined;
       if (sessionId) send(sessionId, "purchase_button_click", blockId);
+      // dá ~200 ms para o Pixel enviar o InitiateCheckout antes de sair para o checkout
+      // (antes, a navegação imediata podia cancelar o envio). Ctrl/Cmd+clique segue normal.
+      if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && a.target !== "_blank") {
+        e.preventDefault();
+        const href = a.href;
+        setTimeout(() => location.assign(href), 220);
+      }
     };
     document.addEventListener("click", onClick);
     return () => {

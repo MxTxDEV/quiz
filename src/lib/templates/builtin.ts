@@ -90,8 +90,10 @@ function profile(id: string, name: string, p: Partial<Profile>): Profile {
     ctaLabel: "Ver recomendação",
     ctaTarget: "sales_page",
     isDefault: false,
+    paths: [],
+    firstStep: "",
     ...p,
-  };
+  } as Profile;
 }
 
 let n = 0;
@@ -415,6 +417,28 @@ function when(id: string, conds: Cond[], combinator: "and" | "or" = "and") {
   return rule(id, "", "_", combinator, conds).when;
 }
 
+/** Regra = E entre grupos; cada grupo = OU entre condições. */
+function ruleAll(id: string, name: string, profileId: string, groups: Cond[][]): Rule {
+  return {
+    id,
+    name,
+    enabled: true,
+    profileId,
+    when: {
+      kind: "group",
+      id: `${id}_g`,
+      combinator: "and",
+      children: groups.map((conds, gi) => ({
+        kind: "group" as const,
+        id: `${id}_g${gi}`,
+        combinator: "or" as const,
+        children: conds.map(([source, target, operator, value], i) => ({ kind: "condition" as const, id: `${id}_g${gi}_c${i}`, source, target, operator, value })),
+      })),
+    },
+  };
+}
+const attr = (key: string, ...values: string[]): Cond[] => values.map((v) => ["attribute", key, "equals", v] as Cond);
+
 function rotaInvisivel(): CampaignConfig {
   const c = base();
   const dark = {
@@ -430,162 +454,219 @@ function rotaInvisivel(): CampaignConfig {
     spacing: "normal" as const,
   };
   c.theme = { ...dark };
+
+  // ---------------- Abertura e perguntas ----------------
   c.quiz.intro = {
     enabled: true,
-    title: "Qual caminho de renda extra combina com a sua realidade?",
-    subtitle: "Responda 7 perguntas rápidas sobre seu tempo, seu orçamento e suas preferências.",
+    title: "Você quer ganhar dinheiro extra, mas ainda não sabe por onde começar?",
+    subtitle: "Descubra oportunidades compatíveis com seu tempo, seu orçamento e suas habilidades. Responda algumas perguntas e encontre um caminho para começar.",
     imageUrl: "",
     ctaLabel: "Descobrir meu caminho",
     disclaimer: "Quiz de orientação. Não é diagnóstico nem promessa de ganhos.",
   };
   c.quiz.questions = [
-    q("objetivo", "single", "Quanto você gostaria de ganhar a mais por mês?", "objetivo_financeiro", [
+    q("objetivo", "single", "Quanto dinheiro extra você gostaria de conseguir por mês?", "objetivo_financeiro", [
       ["Até R$ 500", "ate_500"],
-      ["R$ 500 a R$ 1.000", "500_1000"],
-      ["R$ 1.000 a R$ 2.000", "1000_2000"],
+      ["De R$ 500 a R$ 1.000", "500_1000"],
+      ["De R$ 1.000 a R$ 2.000", "1000_2000"],
       ["Mais de R$ 2.000", "mais_2000"],
     ]),
-    q("tempo", "single", "Quanto tempo por dia você teria disponível?", "tempo_disponivel", [
-      ["Até 1 hora por dia", "ate_1h"],
-      ["De 1 a 3 horas por dia", "1_3h"],
-      ["Mais de 3 horas por dia", "mais_3h"],
+    q("tempo", "single", "Quanto tempo você consegue dedicar por dia a uma atividade para gerar renda extra?", "tempo_disponivel", [
+      ["Até 1 hora", "ate_1h"],
+      ["De 1 a 3 horas", "1_3h"],
+      ["Mais de 3 horas", "mais_3h"],
     ]),
-    q("capital", "single", "Quanto você poderia investir para começar?", "capital_inicial", [
+    q("capital", "single", "Quanto você poderia investir para começar, sem comprometer suas contas?", "capital_inicial", [
+      ["Quero começar sem investir", "zero"],
       ["Até R$ 50", "ate_50"],
       ["De R$ 50 a R$ 300", "50_300"],
       ["Mais de R$ 300", "mais_300"],
     ]),
-    q("preferencia", "single", "O que você prefere fazer?", "preferencia", [
+    q("preferencia", "single", "Qual dessas atividades mais combina com você?", "preferencia", [
       ["Vender produtos", "vendas"],
       ["Prestar serviços", "servicos"],
-      ["Criar conteúdo na internet", "conteudo"],
-      ["Ainda não sei", "indefinido"],
+      ["Trabalhar pela internet", "internet"],
+      ["Criar conteúdo", "conteudo"],
+      ["Ainda não sei. Quero descobrir.", "indefinido"],
     ]),
-    q("dificuldade", "single", "Qual é a sua principal dificuldade hoje?", "dificuldade", [
+    q("dificuldade", "single", "O que mais está impedindo você de começar hoje?", "dificuldade", [
       ["Não sei por onde começar", "por_onde_comecar"],
-      ["Tenho pouco tempo", "tempo"],
       ["Tenho pouco dinheiro", "dinheiro"],
-      ["Já tentei e não deu certo", "ja_tentou"],
+      ["Tenho pouco tempo", "tempo"],
       ["Não sei como conseguir clientes", "clientes"],
+      ["Já tentei antes, mas não consegui resultados", "ja_tentou"],
     ]),
-    q("onde", "single", "Onde você prefere atuar?", "onde_atuar", [
+    q("onde", "single", "Onde você gostaria de desenvolver sua atividade?", "onde_atuar", [
       ["Pela internet", "internet"],
-      ["Fora da internet", "presencial"],
-      ["Nos dois", "ambos"],
+      ["Na minha cidade ou região", "presencial"],
+      ["Tanto faz. Quero a melhor oportunidade.", "ambos"],
     ]),
-    q("experiencia", "yes_no", "Você já vendeu algum produto ou serviço?", "ja_vendeu"),
+    q("experiencia", "yes_no", "Você já vendeu algum produto ou prestou algum serviço antes?", "ja_vendeu", [
+      ["Sim, já tive alguma experiência", "sim"],
+      ["Não, estou começando do zero", "nao"],
+    ]),
   ];
-  c.quiz.settings.transitionMessage = "Analisando suas respostas...";
+  c.quiz.settings.transitionMessage = "Cruzando suas respostas com os caminhos do guia...";
 
+  // ---------------- Página de resultado ----------------
+  const reason = (id: string, text: string, key: string, value: string) => ({ id, text, when: when(id, [["attribute", key, "equals", value]]) });
+  c.quiz.result = {
+    eyebrow: "Análise concluída",
+    headline: "Encontramos caminhos que podem combinar com sua realidade.",
+    reasonsTitle: "Por que esse perfil combina com você",
+    maxReasons: 3,
+    pathsTitle: "3 caminhos recomendados para você",
+    firstStepTitle: "Seu primeiro passo prático (dá para fazer hoje)",
+    transitionTitle: "Agora você já tem uma direção. Falta transformar essa direção em um plano de ação.",
+    transitionText: "O ROTA INVISÍVEL reúne métodos, oportunidades, ferramentas e orientações práticas para ajudar você a sair da dúvida e começar a executar.",
+    // ordem = prioridade: aparecem as 3 primeiras que batem com as respostas
+    reasons: [
+      reason("rs_cap0", "Você quer começar sem investir — por isso nenhum caminho abaixo depende de estoque.", "capital_inicial", "zero"),
+      reason("rs_cap50", "Você pode investir até R$ 50: dá para testar uma ideia sem comprometer as contas.", "capital_inicial", "ate_50"),
+      reason("rs_cap300", "Com até R$ 300, você pode testar algo que pede algum material, sempre em pequena escala.", "capital_inicial", "50_300"),
+      reason("rs_capmais", "Com mais de R$ 300 disponíveis, opções com produção ou pequeno estoque também entram na conta.", "capital_inicial", "mais_300"),
+      reason("rs_t1", "Você tem até 1 hora por dia — os caminhos priorizam tarefas que cabem em blocos curtos.", "tempo_disponivel", "ate_1h"),
+      reason("rs_t3", "Com 1 a 3 horas por dia, dá para atender os primeiros clientes sem largar sua rotina.", "tempo_disponivel", "1_3h"),
+      reason("rs_tmais", "Com mais de 3 horas por dia, você pode testar mais de uma frente ao mesmo tempo.", "tempo_disponivel", "mais_3h"),
+      reason("rs_pv", "Você prefere vender produtos.", "preferencia", "vendas"),
+      reason("rs_ps", "Você prefere prestar serviços.", "preferencia", "servicos"),
+      reason("rs_pi", "Você prefere trabalhar pela internet.", "preferencia", "internet"),
+      reason("rs_pc", "Você gosta de criar conteúdo.", "preferencia", "conteudo"),
+      reason("rs_pind", "Você ainda está escolhendo — por isso comparamos caminhos de naturezas diferentes.", "preferencia", "indefinido"),
+      reason("rs_dcli", "Sua maior trava é conseguir clientes — cada caminho diz onde encontrá-los.", "dificuldade", "clientes"),
+      reason("rs_dzero", "Está começando do zero: todos os primeiros passos são para iniciantes.", "ja_vendeu", "nao"),
+    ],
+  };
+
+  const path = (title: string, how: string, needs: string, challenge: string, firstStep: string) => ({ title, how, needs, challenge, firstStep });
+  const cta = "Quero conhecer meu plano de ação";
   c.profiles = [
-    profile("vendedor", "Vendedor de baixo investimento", {
-      title: "Você pode começar a vender sem montar um grande estoque.",
-      subtitle: "Seu perfil combina com modelos de venda que exigem pouco capital inicial.",
-      description: "Existem formas de vender em que você valida o interesse do comprador antes de comprar mercadorias, o que reduz o risco de começar.",
-      recommendations: ["Conheça vendas sob encomenda e revenda sem estoque", "Comece pelos contatos que você já tem", "Use estratégias simples para encontrar compradores"],
-      ctaLabel: "Ver meu caminho",
+    profile("local", "Empreendedor do bairro", {
+      title: "Você pode começar vendendo para quem está perto de você.",
+      subtitle: "Com algum capital e preferência por atuar na sua região, faz sentido testar produtos com saída rápida no bairro — produzindo ou comprando em pequena escala.",
+      paths: [
+        path("Alimentação por encomenda", "Você produz em pequenas levas (bolo de pote, marmitas, salgados congelados) e só aumenta quando já tem pedidos.", "De R$ 50 a R$ 300 em ingredientes e embalagens.", "Calcular custos e manter a qualidade a cada leva.", "Faça 10 unidades de 2 sabores e ofereça a colegas e vizinhos."),
+        path("Revenda para quem está perto", "Você vende produtos de fornecedores ou de outros produtores para a sua rede, por catálogo ou pequeno estoque.", "Capital para poucas unidades ou um catálogo de fornecedor.", "Escolher um produto que as pessoas já compram com frequência.", "Pergunte a 20 pessoas próximas o que elas compram todo mês."),
+        path("Negócio sazonal", "Você aproveita datas fortes (Dia das Mães, Natal, festas) com personalizados, kits ou decoração de festas pequenas.", "Materiais básicos para um kit de exemplo.", "A procura se concentra perto das datas.", "Escolha a próxima data comemorativa e monte um kit de exemplo."),
+      ],
+      firstStep: "Antes de comprar qualquer material, escolha um produto e pergunte a 5 pessoas próximas se comprariam e por quanto. As respostas valem mais que qualquer palpite.",
+      ctaLabel: cta,
     }),
-    profile("servicos", "Prestador de serviços", {
-      title: "O que você já sabe fazer pode virar um serviço.",
-      subtitle: "Seu perfil combina com a monetização de habilidades.",
-      description: "Serviços costumam exigir pouco investimento: o principal recurso é o seu conhecimento e o seu tempo.",
-      recommendations: ["Liste as habilidades que você já tem", "Avalie serviços digitais e locais", "Aprenda a apresentar sua oferta para os primeiros clientes"],
-      ctaLabel: "Ver meu caminho",
+    profile("vendedor", "Vendedor sem estoque", {
+      title: "Você pode começar a vender sem montar estoque.",
+      subtitle: "Para quem prefere vender, o caminho mais seguro é vender antes de comprar: encomenda, desapego e indicação de produtos de outras empresas.",
+      paths: [
+        path("Venda sob encomenda", "Você mostra o produto, recebe o pedido (e se possível um sinal) e só depois produz ou compra.", "Fotos dos produtos e um catálogo simples — de R$ 0 a R$ 50.", "Cumprir prazos de entrega.", "Monte um catálogo com 3 produtos e publique no seu status."),
+        path("Desapego e brechó on-line", "Você vende itens parados da sua casa ou peças garimpadas em marketplaces e grupos.", "R$ 0 — só os itens e boas fotos.", "Caprichar nas fotos, na descrição e no preço.", "Separe 10 itens que você não usa e anuncie hoje."),
+        path("Afiliado de produtos", "Você recomenda produtos de outras empresas e recebe uma comissão por venda feita pelo seu link.", "Celular e um canal: status, grupo ou perfil.", "Ganhar confiança sem virar spam.", "Escolha 1 produto que você usa e explique por que recomenda."),
+      ],
+      firstStep: "Separe 10 itens que você não usa e anuncie em um marketplace hoje. É o jeito mais rápido de treinar foto, descrição, preço e negociação sem gastar nada.",
+      ctaLabel: cta,
+    }),
+    profile("servicos_locais", "Prestador de serviços local", {
+      title: "O que você já sabe fazer pode virar um serviço na sua região.",
+      subtitle: "Serviços quase não pedem investimento: o principal recurso é o seu tempo e a sua habilidade. Na sua região, a indicação é o motor.",
+      paths: [
+        path("Serviços para casas e famílias", "Faxina e organização, passeio com pets, montagem de móveis e pequenos reparos.", "De R$ 0 a R$ 50 e algo que você já faz bem.", "Conquistar a confiança dos primeiros clientes.", "Ofereça preço de lançamento a 3 conhecidos e peça uma avaliação."),
+        path("Atendimento a domicílio ou aulas", "Manicure e sobrancelha a domicílio ou aulas de reforço para crianças do bairro.", "Material básico ou domínio de uma matéria.", "Organizar agenda e deslocamento.", "Defina seu preço por hora e divulgue no grupo do bairro."),
+        path("Serviços para negócios do bairro", "Artes, cardápios e redes sociais para comércios que você já frequenta.", "Celular e ferramentas gratuitas, como o Canva.", "Mostrar exemplos antes de ter clientes.", "Crie um cardápio de exemplo para um comércio que você conhece."),
+      ],
+      firstStep: "Liste 5 coisas que você faz bem e que alguém pagaria para não ter que fazer. Escolha a que dá para começar ainda nesta semana.",
+      ctaLabel: cta,
+    }),
+    profile("servicos_digitais", "Prestador de serviços digitais", {
+      title: "Você pode vender serviços pela internet usando ferramentas gratuitas.",
+      subtitle: "Pequenos negócios precisam de ajuda com posts, artes, vídeos e organização — e muitos desses serviços começam só com celular e ferramentas grátis.",
+      paths: [
+        path("Serviços digitais para pequenos negócios", "Social media, artes no Canva e edição de vídeos curtos para comércios e profissionais.", "Celular ou computador e ferramentas gratuitas (Canva, CapCut).", "Montar um portfólio antes do primeiro cliente.", "Produza 3 exemplos e mostre a um negócio que você conhece."),
+        path("Assistente virtual", "Você cuida de tarefas como agenda, planilhas e atendimento para autônomos e pequenas empresas.", "Organização e acesso à internet.", "Definir um pacote e um preço justo.", "Liste 5 tarefas que você sabe fazer e ofereça um pacote de horas."),
+        path("Aulas e serviços de conhecimento", "Aulas particulares on-line, currículos e perfis do LinkedIn.", "Domínio de um assunto ou boa escrita.", "Divulgar para quem precisa.", "Ofereça uma aula experimental ou refaça o currículo de um conhecido."),
+      ],
+      firstStep: "Escolha um serviço e crie 3 exemplos com ferramentas gratuitas. Esse mini portfólio vale mais que qualquer currículo na hora de conseguir o primeiro cliente.",
+      ctaLabel: cta,
     }),
     profile("conteudo", "Criador de conteúdo", {
-      title: "Conteúdo pode ser o começo de uma renda extra.",
-      subtitle: "Seu perfil combina com criação de conteúdo e produtos digitais.",
-      description: "Criar conteúdo exige constância. Entender as formas de monetização ajuda a escolher onde colocar sua energia.",
-      recommendations: ["Escolha um tema que você domina", "Conheça as formas de monetização", "Pense em produtos digitais desde o início"],
-      ctaLabel: "Ver meu caminho",
+      title: "Conteúdo pode ser o começo da sua renda extra.",
+      subtitle: "Criar conteúdo exige constância. Saber de antemão como ele vira dinheiro ajuda a colocar energia no lugar certo.",
+      paths: [
+        path("Conteúdo + afiliados", "Você publica conteúdos úteis sobre um tema e indica produtos relacionados com link de afiliado.", "Celular e um tema que você domina.", "Manter a constância nas primeiras semanas.", "Publique 3 conteúdos curtos sobre um tema e indique 1 produto que usa."),
+        path("Vídeos UGC para marcas", "Você grava vídeos naturais mostrando produtos para marcas usarem em anúncios.", "Celular e boa iluminação.", "Montar um portfólio inicial.", "Grave 2 vídeos de exemplo com produtos que você tem em casa."),
+        path("Produto digital simples", "Você transforma o que sabe em um e-book, planilha ou guia e vende para quem acompanha você.", "Conhecimento e ferramentas gratuitas.", "Validar o interesse antes de criar.", "Pergunte ao seu público qual dúvida eles mais têm."),
+      ],
+      firstStep: "Escolha um tema que você domina e publique 3 conteúdos curtos respondendo dúvidas reais. O que gerar mais perguntas é o seu ponto de partida.",
+      ctaLabel: cta,
     }),
-    profile("explorador", "Explorador", {
-      title: "Seu momento é de conhecer as possibilidades.",
-      subtitle: "Antes de escolher, vale comparar os caminhos.",
-      description: "Suas respostas indicam que comparar modelos de renda, com critérios claros, é o melhor primeiro passo.",
-      recommendations: ["Compare modelos de renda lado a lado", "Use critérios para avaliar cada oportunidade", "Escolha uma direção e teste em pequena escala"],
-      ctaLabel: "Ver meu caminho",
+    profile("iniciante", "Iniciante com pouco capital", {
+      title: "Comece por modelos que não exigem estoque.",
+      subtitle: "Com base nas suas respostas, faz sentido começar por modelos que não exigem estoque elevado e permitem validar uma oportunidade antes de investir mais dinheiro.",
+      paths: [
+        path("Um serviço com o que você já sabe fazer", "Você transforma uma habilidade que já tem (organizar, ensinar, consertar, cuidar) em um serviço simples.", "R$ 0 — sua habilidade e algumas horas.", "Enxergar o que você sabe como algo vendável.", "Liste 5 habilidades e marque a que mais pessoas pediriam."),
+        path("Desapego do que você não usa", "Você vende itens parados em marketplaces e grupos — e aprende a anunciar e negociar.", "R$ 0 — só os itens e boas fotos.", "Fotos e descrições que chamem atenção.", "Separe 10 itens e anuncie hoje."),
+        path("Artes simples no Canva", "Você cria cardápios, convites e posts para pessoas e comércios próximos.", "Celular e o Canva gratuito.", "Mostrar exemplos para conseguir o primeiro pedido.", "Monte um cardápio de exemplo e ofereça a 3 estabelecimentos."),
+      ],
+      firstStep: "Faça um inventário rápido: o que você sabe fazer, quantas horas tem por semana e 10 pessoas que você poderia avisar. Com isso dá para escolher uma ideia de custo zero.",
+      ctaLabel: cta,
+    }),
+    profile("explorador", "Explorador de oportunidades", {
+      title: "Seu momento é de comparar caminhos e testar o melhor deles.",
+      subtitle: "Você está aberto a possibilidades e tem algum capital. O melhor primeiro passo é comparar opções com critérios claros e testar uma em pequena escala.",
+      paths: [
+        path("Alimentação por encomenda", "Produção em pequenas levas, vendida antes de produzir mais.", "De R$ 50 a R$ 300 em ingredientes e embalagens.", "Calcular custos e manter a qualidade.", "Faça uma leva teste e ofereça a 10 pessoas."),
+        path("Prestação de serviços", "Serviços locais ou digitais a partir do que você já sabe fazer.", "Pouco ou nenhum investimento.", "Conseguir os primeiros clientes.", "Escolha um serviço e ofereça a 3 conhecidos."),
+        path("Revenda de produtos de nicho", "Você escolhe um nicho (por exemplo, pets ou fitness) e revende para um público específico.", "Capital para poucas unidades ou catálogo.", "Escolher bem o nicho e o fornecedor.", "Liste 3 nichos que você conhece e pesquise preços em marketplaces."),
+      ],
+      firstStep: "Escolha 3 ideias que despertaram seu interesse e dê uma nota de 1 a 5 para tempo, investimento, habilidade e procura perto de você. Comece pela de maior nota.",
+      ctaLabel: cta,
       isDefault: true,
     }),
   ];
+  // a primeira regra atendida define o perfil (ordem importa)
   c.rules = [
-    rule("r_vendedor", "Prefere vender produtos", "vendedor", "and", [["attribute", "preferencia", "equals", "vendas"]]),
-    rule("r_servicos", "Prefere prestar serviços", "servicos", "and", [["attribute", "preferencia", "equals", "servicos"]]),
-    rule("r_conteudo", "Prefere criar conteúdo", "conteudo", "and", [["attribute", "preferencia", "equals", "conteudo"]]),
+    ruleAll("r_local", "Atuar na região, com capital para produzir/revender", "local", [attr("onde_atuar", "presencial"), attr("capital_inicial", "50_300", "mais_300"), attr("preferencia", "vendas", "indefinido")]),
+    ruleAll("r_vendedor", "Prefere vender produtos", "vendedor", [attr("preferencia", "vendas")]),
+    ruleAll("r_servicos_locais", "Serviços na região", "servicos_locais", [attr("preferencia", "servicos"), attr("onde_atuar", "presencial", "ambos")]),
+    ruleAll("r_servicos_digitais", "Serviços / trabalho pela internet", "servicos_digitais", [attr("preferencia", "servicos", "internet")]),
+    ruleAll("r_conteudo", "Prefere criar conteúdo", "conteudo", [attr("preferencia", "conteudo")]),
+    ruleAll("r_iniciante", "Ainda não sabe e tem pouco capital", "iniciante", [attr("preferencia", "indefinido"), attr("capital_inicial", "zero", "ate_50")]),
   ];
 
+  // ---------------- Oferta (checkout e preço preservados) ----------------
   c.offer = {
     ...c.offer,
     productName: "Rota Invisível",
     priceCents: 1990,
-    paymentTerms: "Pagamento único",
+    paymentTerms: "Pagamento único · sem mensalidade",
     buttonLabel: "Quero acessar o Rota Invisível",
     checkoutUrl: "https://pay.kiwify.com.br/7fyz1pO",
-    description: "Um guia prático com diferentes possibilidades de construir uma renda extra pela internet e fora dela.",
-    benefits: [
-      "O universo da renda extra",
-      "Dinheiro pela internet",
-      "Oportunidades fora da internet",
-      "Começando com pouco",
-      "Como encontrar clientes",
-      "Ferramentas para começar",
-      "Plano de execução",
-    ],
+    description: "Um guia prático para identificar oportunidades de renda extra, pela internet e fora dela, e organizar a execução.",
+    benefits: ["O universo da renda extra", "Dinheiro pela internet", "Oportunidades fora da internet", "Começando com pouco", "Como encontrar clientes", "Ferramentas para começar", "Plano de execução de 30 dias"],
     bonuses: [
-      { title: "30 ideias de renda extra", description: "Uma seleção de possibilidades para explorar.", imageUrl: "" },
-      { title: "Kit de ferramentas gratuitas", description: "Ferramentas que podem ajudar na criação, divulgação e comercialização.", imageUrl: "" },
-      { title: "Guia para conseguir clientes", description: "Estratégias práticas para encontrar potenciais compradores.", imageUrl: "" },
-      { title: "Plano de execução de 30 dias", description: "Um roteiro para organizar e executar as primeiras ações.", imageUrl: "" },
+      { title: "30 ideias de renda extra", description: "Cada ideia com investimento, tempo, onde encontrar clientes e o primeiro passo.", imageUrl: "" },
+      { title: "Kit de ferramentas gratuitas", description: "Ferramentas grátis organizadas por tarefa: atendimento, conteúdo, organização, finanças e pedidos.", imageUrl: "" },
+      { title: "Guia para encontrar clientes", description: "Método em 5 passos, scripts de abordagem prontos, follow-up e respostas para objeções.", imageUrl: "" },
+      { title: "Plano de execução de 30 dias", description: "Tarefas diárias para escolher, oferecer, ajustar e consolidar sua atividade.", imageUrl: "" },
     ],
     guarantee: "", // preencha com a política real do produto
     guaranteeDays: null,
   };
 
-  const P = { v: ["vendedor"], s: ["servicos"], c: ["conteudo"], e: ["explorador"] };
-  const ctaLabel = "Quero descobrir meu caminho";
+  // ---------------- Página de vendas ----------------
   c.salesPage = {
     theme: { ...dark },
-    brand: { name: "Rota Invisível", tagline: "Encontre caminhos para ganhar dinheiro que você ainda não enxergou.", logoUrl: "" },
+    brand: { name: "Rota Invisível", tagline: "Guia prático de renda extra", logoUrl: "" },
     effects: true,
     blocks: [
-      // 1 — Hero (variações por perfil; sem perfil = versão geral)
+      // 1 — Hero
       b("hero", {
-        group: "hero",
-        badge: "Produto digital",
-        headline: "Você não precisa de mais dinheiro para começar. Precisa descobrir os caminhos que ainda não enxergou.",
-        subheadline: "Descubra diferentes maneiras de construir uma renda extra, mesmo tendo pouco tempo, pouco dinheiro e nenhuma experiência. Um guia prático para encontrar oportunidades e começar com o que você já tem.",
-        ctaLabel,
-        ctaAction: "offer",
-      }),
-      b("hero", {
-        group: "hero",
-        profileIds: P.v,
-        badge: "Produto digital",
-        headline: "Você não precisa de estoque para começar a vender. Precisa descobrir os caminhos que ainda não enxergou.",
-        subheadline: "Conheça modelos de venda sob encomenda, revenda sem estoque e estratégias para encontrar compradores — começando com o que você já tem.",
-        ctaLabel,
-        ctaAction: "offer",
-      }),
-      b("hero", {
-        group: "hero",
-        profileIds: P.s,
-        badge: "Produto digital",
-        headline: "O que você já sabe fazer pode ser o começo da sua renda extra.",
-        subheadline: "Descubra como transformar habilidades em serviços digitais ou locais e como apresentar sua oferta para os primeiros clientes.",
-        ctaLabel,
-        ctaAction: "offer",
-      }),
-      b("hero", {
-        group: "hero",
-        profileIds: P.c,
-        badge: "Produto digital",
-        headline: "Conteúdo pode virar renda. O primeiro passo é enxergar os caminhos certos.",
-        subheadline: "Entenda as formas de monetizar conteúdo, criar produtos digitais e construir audiência — com orientação prática para começar.",
-        ctaLabel,
-        ctaAction: "offer",
+        badge: "Guia prático + 4 bônus",
+        headline: "Você não precisa continuar tentando descobrir sozinho como conseguir uma renda extra.",
+        subheadline: "Descubra oportunidades, conheça diferentes modelos de renda e tenha um plano prático para começar com os recursos que já possui. Um guia direto para quem quer sair da dúvida e transformar ideias em ações.",
+        ctaLabel: "Quero começar agora",
+        ctaAction: "checkout",
+        showPrice: true,
       }),
 
-      // 2 — Resultado personalizado (respostas reais + interpretações por condição)
+      // 2 — Resultado do quiz (só para quem respondeu)
       b("personalized", {
         tone: "surface",
         eyebrow: "Analisamos suas respostas",
@@ -593,34 +674,41 @@ function rotaInvisivel(): CampaignConfig {
         summary: [
           { id: "s_obj", label: "Objetivo financeiro", questionId: "objetivo" },
           { id: "s_tempo", label: "Tempo disponível", questionId: "tempo" },
-          { id: "s_dif", label: "Principal dificuldade", questionId: "dificuldade" },
-          { id: "s_pref", label: "Preferência de atividade", questionId: "preferencia" },
-          { id: "s_cap", label: "Capital inicial", questionId: "capital" },
-          { id: "s_onde", label: "Onde prefere atuar", questionId: "onde" },
+          { id: "s_cap", label: "Investimento inicial", questionId: "capital" },
+          { id: "s_pref", label: "Atividade preferida", questionId: "preferencia" },
+          { id: "s_dif", label: "Principal obstáculo", questionId: "dificuldade" },
+          { id: "s_onde", label: "Onde quer atuar", questionId: "onde" },
         ],
-        maxInsights: 4,
         insights: [
-          { id: "i_vendas", title: "Vender sem montar estoque", text: "Como você prefere vender produtos, vale conhecer modelos de revenda, vendas sob encomenda e comercialização sem estoque — apresentados no guia.", when: when("i_vendas", [["attribute", "preferencia", "equals", "vendas"]]) },
-          { id: "i_servicos", title: "Transformar habilidades em serviços", text: "Como você prefere prestar serviços, o guia mostra possibilidades de serviços digitais e locais e como apresentar o que você sabe fazer.", when: when("i_servicos", [["attribute", "preferencia", "equals", "servicos"]]) },
-          { id: "i_conteudo", title: "Do conteúdo à monetização", text: "Como você prefere criar conteúdo, o guia apresenta formas de monetização, produtos digitais e estratégias de divulgação.", when: when("i_conteudo", [["attribute", "preferencia", "equals", "conteudo"]]) },
-          { id: "i_indef", title: "Comparar antes de escolher", text: "Você ainda não definiu uma preferência. O guia compara diferentes modelos de renda e apresenta critérios para escolher um que faça sentido para você.", when: when("i_indef", [["attribute", "preferencia", "equals", "indefinido"]]) },
-          { id: "i_comecar", title: "Um roteiro para o primeiro passo", text: "Você disse que não sabe por onde começar. O plano de execução organiza as primeiras ações ao longo de 30 dias.", when: when("i_comecar", [["attribute", "dificuldade", "equals", "por_onde_comecar"]]) },
-          { id: "i_clientes", title: "Encontrar os primeiros clientes", text: "Sua principal dificuldade é conseguir clientes. Há um capítulo dedicado a divulgar serviços, apresentar ofertas e conquistar compradores.", when: when("i_clientes", [["attribute", "dificuldade", "equals", "clientes"]]) },
-          { id: "i_tentou", title: "Escolher com critério", text: "Você já tentou antes. Conhecer o que cada caminho exige ajuda a escolher uma opção mais alinhada à sua realidade.", when: when("i_tentou", [["attribute", "dificuldade", "equals", "ja_tentou"]]) },
-          { id: "i_baixo", title: "Começar com pouco investimento", text: "Você indicou até R$ 50 para começar. O guia reúne alternativas de baixo investimento inicial, para testar uma ideia sem comprometer seu orçamento.", when: when("i_baixo", [["attribute", "capital_inicial", "equals", "ate_50"]]) },
-          { id: "i_medio", title: "Um orçamento pequeno já abre opções", text: "Com até R$ 300 para começar, é possível avaliar alternativas que pedem algum investimento, sempre testando antes de ampliar.", when: when("i_medio", [["attribute", "capital_inicial", "equals", "50_300"]]) },
-          { id: "i_1h", title: "Atividades para períodos curtos", text: "Com até 1 hora por dia, faz sentido priorizar atividades que possam ser feitas em blocos curtos e organizadas ao longo da semana.", when: when("i_1h", [["attribute", "tempo_disponivel", "equals", "ate_1h"]]) },
-          { id: "i_poucotempo", title: "Aproveitar bem o tempo disponível", text: "Pouco tempo foi a dificuldade que você apontou. O plano de execução ajuda a organizar ações pequenas e consistentes.", when: when("i_poucotempo", [["attribute", "dificuldade", "equals", "tempo"]]) },
+          { id: "i_vendas", title: "Vender sem montar estoque", text: "Como você prefere vender, o guia mostra venda sob encomenda, revenda e marketplaces — e como validar antes de comprar mercadoria.", when: when("i_vendas", [["attribute", "preferencia", "equals", "vendas"]]) },
+          { id: "i_servicos", title: "Transformar habilidades em serviços", text: "Como você prefere prestar serviços, o guia apresenta serviços digitais e locais e como apresentar o que você sabe fazer.", when: when("i_servicos", [["attribute", "preferencia", "equals", "servicos"]]) },
+          { id: "i_internet", title: "Trabalhar pela internet com ferramentas gratuitas", text: "Como você prefere a internet, o capítulo 2 e o kit de ferramentas mostram serviços digitais, afiliados e produtos digitais que começam com celular.", when: when("i_internet", [["attribute", "preferencia", "equals", "internet"]]) },
+          { id: "i_conteudo", title: "Do conteúdo à monetização", text: "Como você gosta de criar conteúdo, o guia apresenta formas de monetização, produtos digitais e divulgação.", when: when("i_conteudo", [["attribute", "preferencia", "equals", "conteudo"]]) },
+          { id: "i_indef", title: "Comparar antes de escolher", text: "Você ainda está escolhendo. O guia compara os quatro grandes caminhos de renda extra e traz critérios para avaliar cada oportunidade.", when: when("i_indef", [["attribute", "preferencia", "equals", "indefinido"]]) },
+          { id: "i_zero", title: "Começar sem investir", text: "Você quer começar sem gastar. Várias das 30 ideias começam com R$ 0 — cada uma diz o investimento e o primeiro passo.", when: when("i_zero", [["attribute", "capital_inicial", "equals", "zero"]]) },
+          { id: "i_baixo", title: "Começar com pouco investimento", text: "Com até R$ 50, dá para testar uma ideia sem comprometer o orçamento. O capítulo 4 mostra o que fazer em cada faixa de orçamento.", when: when("i_baixo", [["attribute", "capital_inicial", "equals", "ate_50"]]) },
+          { id: "i_clientes", title: "Encontrar os primeiros clientes", text: "Sua maior trava é conseguir clientes. O guia de clientes traz um método em 5 passos e scripts de abordagem prontos para copiar.", when: when("i_clientes", [["attribute", "dificuldade", "equals", "clientes"]]) },
+          { id: "i_comecar", title: "Um roteiro para o primeiro passo", text: "Você disse que não sabe por onde começar. O plano de 30 dias organiza as primeiras ações dia a dia.", when: when("i_comecar", [["attribute", "dificuldade", "equals", "por_onde_comecar"]]) },
+          { id: "i_poucotempo", title: "Aproveitar bem o pouco tempo", text: "Pouco tempo foi o obstáculo que você apontou. O plano de execução divide tudo em ações pequenas, de 30 a 60 minutos.", when: when("i_poucotempo", [["attribute", "dificuldade", "equals", "tempo"]]) },
+          { id: "i_tentou", title: "Escolher com critério desta vez", text: "Você já tentou antes. Conhecer o que cada caminho exige — e testar pequeno — ajuda a escolher algo alinhado à sua realidade.", when: when("i_tentou", [["attribute", "dificuldade", "equals", "ja_tentou"]]) },
         ],
-        fallbackText: "Com base nas suas respostas, o primeiro passo é conhecer as possibilidades e escolher uma que faça sentido para a sua realidade.",
+        maxInsights: 3,
       }),
 
-      // 3 — Problema (curto)
+      // 3 — Identificação com o problema
       b("text", {
         emphasis: "statement",
-        title: "O problema não é falta de oportunidade. É falta de direção.",
-        body: "Sem saber qual caminho escolher, é fácil perder tempo, abandonar ideias e continuar no mesmo lugar. O primeiro passo é conhecer as opções e escolher uma que caiba na sua realidade.",
+        title: "Talvez o problema não seja falta de vontade. Talvez esteja faltando direção.",
+        body: "Veja se você se reconhece em alguma destas situações:",
+        bullets: [
+          "Você quer ganhar dinheiro, mas não sabe qual atividade escolher.",
+          "Encontra muitas ideias, mas não sabe quais são viáveis.",
+          "Tem medo de investir e perder dinheiro.",
+          "Não sabe como encontrar os primeiros clientes.",
+          "Começa a pesquisar e termina mais confuso do que começou.",
+        ],
       }),
+      b("subheadline", { text: "Você não precisa de mais uma lista aleatória de ideias. Precisa de um caminho que consiga colocar em prática.", align: "center" }),
 
       // 4 — Solução
       b("text", {
@@ -628,56 +716,95 @@ function rotaInvisivel(): CampaignConfig {
         showMockup: true,
         eyebrow: "A solução",
         title: "Conheça o ROTA INVISÍVEL.",
-        body: "Um mapa prático para encontrar oportunidades e começar com o que você já tem — não uma promessa de enriquecimento.",
-        bullets: ["Renda pela internet e fora dela", "Opções de baixo investimento", "Como conseguir os primeiros clientes", "Plano de ação de 30 dias"],
+        body: "Um guia prático para identificar oportunidades de renda extra e organizar a execução — do primeiro critério de escolha ao primeiro cliente.\n\nEle reúne possibilidades pela internet e fora dela, alternativas para diferentes níveis de investimento (inclusive R$ 0) e ferramentas gratuitas para começar.",
+        bullets: ["Online e offline", "A partir de R$ 0", "Scripts para o primeiro cliente", "Plano de 30 dias"],
       }),
 
-      // 5 — Capítulos (resumido)
+      // 5 — Prévia do conteúdo real (recortes das páginas do material)
+      b("preview", {
+        eyebrow: "Veja por dentro",
+        title: "Antes de comprar, veja o que você vai receber.",
+        subtitle: "Estes são recortes reais do material. Deslize para ver um trecho de cada parte.",
+        items: [
+          { title: "Capítulo 1 — O universo da renda extra", caption: "Como avaliar oportunidades pela sua realidade, e não pela \"melhor do mercado\".", imageUrl: "/produto/previa/capitulo-1.jpg" },
+          { title: "Bônus — 30 ideias de renda extra", caption: "Cada ideia traz investimento, tempo, onde estão os clientes e o primeiro passo.", imageUrl: "/produto/previa/ideias.jpg" },
+          { title: "Bônus — Guia para encontrar clientes", caption: "Scripts de abordagem prontos para adaptar e enviar.", imageUrl: "/produto/previa/clientes.jpg" },
+          { title: "Bônus — Plano de execução de 30 dias", caption: "Tarefas do dia a dia, começando pela decisão do que fazer.", imageUrl: "/produto/previa/plano-30-dias.jpg" },
+          { title: "Bônus — Kit de ferramentas gratuitas", caption: "Ferramentas grátis organizadas por tarefa.", imageUrl: "/produto/previa/ferramentas.jpg" },
+        ],
+        note: "Amostras parciais. O material completo é liberado após a confirmação do pagamento.",
+      }),
+
+      // 6 — O que você vai receber
       b("content", {
         numbered: true,
-        eyebrow: "O que você vai encontrar",
-        title: "Do panorama ao plano de ação, em 7 capítulos.",
+        eyebrow: "O que você vai receber",
+        title: "7 capítulos, do panorama ao plano de ação.",
         items: [
-          { title: "O universo da renda extra", description: "Os modelos de renda e como avaliá-los." },
-          { title: "Dinheiro pela internet", description: "Serviços, vendas, afiliados e produtos digitais." },
-          { title: "Oportunidades fora da internet", description: "Revendas, serviços e negócios locais." },
-          { title: "Começando com pouco", description: "Alternativas de baixo investimento inicial." },
-          { title: "Como encontrar clientes", description: "Divulgar, apresentar ofertas e vender." },
-          { title: "Ferramentas para começar", description: "Recursos gratuitos que ajudam desde o início." },
-          { title: "Plano de execução", description: "Uma oportunidade em prática em 30 dias." },
+          { title: "O universo da renda extra", description: "Entenda os quatro grandes caminhos e use critérios para avaliar qualquer oportunidade." },
+          { title: "Dinheiro pela internet", description: "Serviços digitais, marketplaces, afiliados, produtos digitais e conteúdo — com o que cada um exige." },
+          { title: "Oportunidades fora da internet", description: "Alimentação, revenda, serviços locais e negócios sazonais para vender perto de você." },
+          { title: "Como começar com pouco", description: "O que fazer em cada faixa de orçamento e como vender antes de gastar." },
+          { title: "Como encontrar clientes", description: "Onde estão os primeiros compradores e como abordar sem parecer insistente." },
+          { title: "Ferramentas para começar", description: "Recursos gratuitos que resolvem atendimento, divulgação e organização." },
+          { title: "Plano de execução de 30 dias", description: "Um roteiro dia a dia para sair da ideia e chegar às primeiras ações." },
         ],
       }),
 
-      // 6 — Bônus (exibe apenas os bônus cadastrados na oferta)
-      b("bonuses", { tone: "surface", title: "E ainda tem mais..." }),
+      // 7 — Bônus
+      b("bonuses", { tone: "surface", title: "E você ainda recebe 4 bônus" }),
 
-      // 7 — Avaliações reais de compradores (oculto até haver avaliações aprovadas)
+      // 8 — Para quem é e para quem não é
+      b("fit", {
+        title: "Para quem é o ROTA INVISÍVEL",
+        yesTitle: "É para você se",
+        yes: [
+          "Quer começar uma atividade de renda extra.",
+          "Está perdido entre muitas possibilidades.",
+          "Quer conhecer alternativas com diferentes níveis de investimento.",
+          "Precisa de orientação para encontrar clientes.",
+          "Quer organizar um plano de execução.",
+        ],
+        noTitle: "Não é para você se",
+        no: ["Espera ganhar dinheiro sem executar nenhuma atividade.", "Procura uma promessa de renda garantida.", "Quer uma fórmula mágica de enriquecimento."],
+      }),
+
+      // 9 — Avaliações reais de compradores (oculto até haver avaliações aprovadas)
       b("reviews", { title: "Quem comprou, avalia" }),
 
-      // 8 — Oferta
-      b("offerCard", { title: "Seu acesso ao ROTA INVISÍVEL", buttonLabel: "Quero acessar o Rota Invisível", note: "Pagamento processado com segurança pela plataforma de checkout." }),
+      // 10 — Oferta
+      b("offerCard", {
+        title: "Tenha um caminho mais claro para começar",
+        items: ["Guia Rota Invisível — 7 capítulos", "Bônus: 30 ideias de renda extra", "Bônus: Kit de ferramentas gratuitas", "Bônus: Guia para encontrar clientes", "Bônus: Plano de execução de 30 dias"],
+        buttonLabel: "Quero acessar o Rota Invisível",
+        note: "Acesso digital após a confirmação do pagamento · Compra segura pela Kiwify",
+      }),
 
-      // 9 — FAQ (essencial)
+      // 11 — Perguntas frequentes
       b("faq", {
         tone: "surface",
         title: "Perguntas frequentes",
         items: [
-          { question: "Preciso ter experiência para começar?", answer: "Não. O guia parte do básico e explica o que cada caminho exige, para você avaliar o que faz sentido para a sua realidade." },
-          { question: "Preciso investir muito dinheiro?", answer: "Não. Há um capítulo dedicado a alternativas de baixo investimento inicial. Quando uma opção exige investimento, o guia deixa isso claro." },
-          { question: "Vou ganhar dinheiro imediatamente?", answer: "Não há garantia de resultados financeiros. O guia apresenta possibilidades e um plano de execução; os resultados dependem da sua dedicação e do seu contexto." },
-          { question: "Como receberei o material?", answer: "É um guia digital. Após a confirmação do pagamento, a plataforma de checkout envia as instruções de acesso para o e-mail informado na compra." },
+          { question: "Preciso ter experiência?", answer: "Não. O guia parte do básico e explica o que cada caminho exige. Os primeiros passos foram pensados para quem está começando do zero." },
+          { question: "Preciso investir dinheiro?", answer: "Não necessariamente. Várias ideias começam com R$ 0 e outras pedem algum investimento — cada uma informa quanto, para você decidir com segurança." },
+          { question: "O material ensina apenas a ganhar dinheiro pela internet?", answer: "Não. Há um capítulo inteiro sobre oportunidades fora da internet, como alimentação, revenda, serviços locais e negócios sazonais." },
+          { question: "Como recebo o produto?", answer: "Após a confirmação do pagamento, a Kiwify envia para o seu e-mail o acesso à área de membros, onde ficam o guia e os 4 bônus." },
+          { question: "Posso acessar pelo celular?", answer: "Sim. O material é digital: você pode ler no celular ou no computador e baixar em PDF." },
+          { question: "Vou conseguir ganhar dinheiro imediatamente?", answer: "Não há garantia de resultado financeiro. O guia apresenta caminhos, ferramentas e um plano de execução; os resultados dependem da sua dedicação, do seu contexto e da sua aplicação." },
+          { question: "O pagamento é único?", answer: "Sim. R$ 19,90 uma única vez, sem mensalidade." },
+          { question: "E se eu me arrepender da compra?", answer: "Compras pela internet têm direito de arrependimento de 7 dias (art. 49 do Código de Defesa do Consumidor). Dentro desse prazo, você pode pedir o reembolso pela própria Kiwify." },
         ],
       }),
 
-      // 10 — CTA final
+      // 12 — CTA final
       b("ctaSection", {
-        headline: "Você pode continuar procurando respostas ou começar a explorar novos caminhos.",
-        subheadline: "Conheça as possibilidades, escolha uma direção e dê o primeiro passo.",
-        buttonLabel: ctaLabel,
+        headline: "Você pode continuar procurando ideias ou começar a organizar seu próximo passo.",
+        subheadline: "Conheça o ROTA INVISÍVEL e tenha acesso a um guia prático para identificar oportunidades e começar a executar.",
+        buttonLabel: "Quero meu acesso por R$ 19,90",
         ctaAction: "checkout",
       }),
 
-      // 12 — Rodapé (responsável, privacidade e termos vêm das Configurações)
+      // 13 — Rodapé (responsável, privacidade e termos vêm das Configurações)
       b("footer", {
         text: "Resultados financeiros não são garantidos e dependem de fatores individuais, como dedicação, contexto e aplicação. Este é um produto educativo e não constitui promessa de ganhos.",
       }),
@@ -690,7 +817,7 @@ export const builtinTemplates: { key: string; name: string; description: string;
   {
     key: "rota-invisivel",
     name: "Rota Invisível — quiz + página de vendas",
-    description: "Funil completo do guia Rota Invisível: 7 perguntas, 4 perfis e página de vendas personalizada pelas respostas.",
+    description: "Funil completo do guia Rota Invisível: 7 perguntas, 7 perfis com caminhos recomendados, resultado justificado pelas respostas e página de vendas com prévia real do material.",
     category: "Renda extra",
     config: rotaInvisivel(),
   },

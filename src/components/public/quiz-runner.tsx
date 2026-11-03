@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CircleCheck, Flag, Loader2, Sparkles } from "lucide-react";
 import type { PublicCampaign, PublicProfile, PublicQuestion } from "@/lib/domain/public";
 import { themeVars } from "./theme";
 import { trackThirdParty } from "./pixel";
 
 export type AnswerInput = string | string[] | number | null;
 export type LeadInput = { name: string; email: string; consent: boolean };
-export type Completion = { profile: PublicProfile | null; ctaHref: string };
+export type Completion = { profile: PublicProfile | null; ctaHref: string; reasons?: string[] };
 
 /** Abstração de I/O: o quiz publicado fala com a API; o preview do editor resolve localmente. */
 export interface QuizDriver {
@@ -162,6 +162,7 @@ export function QuizRunner({
           {step.kind === "result" && completion && (
             <ResultView
               completion={completion}
+              page={quiz.result}
               disclaimer={quiz.intro.disclaimer}
               leadSlot={
                 leadCapture.mode === "after_result" && !leadDone ? (
@@ -210,19 +211,33 @@ function PrimaryButton({ children, className = "", ...props }: React.ComponentPr
 
 function Intro({ campaign, onStart }: { campaign: PublicCampaign; onStart: () => void }) {
   const { intro } = campaign.quiz;
+  const n = campaign.quiz.questions.length;
+  const chips = ["Seu tempo", "Seu orçamento", "Suas habilidades"];
   return (
     <div className="flex flex-1 flex-col justify-center gap-6 animate-slide-up">
       {intro.imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={intro.imageUrl} alt="" className="w-full rounded-[var(--q-radius)] object-cover max-h-64" />
       )}
-      <div className="space-y-3 text-center">
-        <h1 className="text-[1.75em] font-bold leading-tight tracking-tight">{intro.title || "Quiz"}</h1>
-        {intro.subtitle && <p className="text-[1.05em] leading-relaxed" style={{ color: "var(--q-muted)" }}>{intro.subtitle}</p>}
+      <div className="space-y-4 text-center">
+        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ background: "color-mix(in srgb, var(--q-accent) 14%, transparent)", color: "var(--q-accent)" }}>
+          <Sparkles className="size-3.5" /> Teste gratuito · resultado na hora
+        </span>
+        <h1 className="text-balance text-[1.95em] font-black leading-[1.08] tracking-tight">{intro.title || "Quiz"}</h1>
+        {intro.subtitle && <p className="text-[1.04em] leading-relaxed" style={{ color: "var(--q-muted)" }}>{intro.subtitle}</p>}
+        <div className="flex flex-wrap justify-center gap-2 pt-1">
+          {chips.map((c) => (
+            <span key={c} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.82em] font-semibold" style={{ borderColor: "color-mix(in srgb, var(--q-text) 14%, transparent)" }}>
+              <Check className="size-3.5" style={{ color: "var(--q-accent)" }} strokeWidth={3} /> {c}
+            </span>
+          ))}
+        </div>
       </div>
-      <PrimaryButton onClick={onStart}>{intro.ctaLabel || "Começar"}</PrimaryButton>
-      <p className="text-center text-xs" style={{ color: "var(--q-muted)" }}>
-        {campaign.quiz.questions.length} perguntas · menos de 2 minutos
+      <PrimaryButton onClick={onStart}>
+        <span className="inline-flex items-center justify-center gap-2 uppercase tracking-wide">{intro.ctaLabel || "Começar"} <ArrowRight className="size-4" /></span>
+      </PrimaryButton>
+      <p className="text-center text-[0.85em]" style={{ color: "var(--q-muted)" }}>
+        São apenas {n} perguntas rápidas. Leva menos de 2 minutos.
       </p>
       {intro.disclaimer && <p className="text-center text-[11px] leading-relaxed" style={{ color: "var(--q-muted)" }}>{intro.disclaimer}</p>}
     </div>
@@ -473,34 +488,88 @@ function Paragraphs({ text }: { text: string }) {
   );
 }
 
-function ResultView({ completion, leadSlot, disclaimer }: { completion: Completion; leadSlot: React.ReactNode; disclaimer: string }) {
+function ResultView({
+  completion,
+  page,
+  leadSlot,
+  disclaimer,
+}: {
+  completion: Completion;
+  page?: PublicCampaign["quiz"]["result"];
+  leadSlot: React.ReactNode;
+  disclaimer: string;
+}) {
   const p = completion.profile;
   if (!p) return <p className="m-auto">Obrigado por responder!</p>;
+  const accent = { color: "var(--q-accent)" };
+  const surface = { background: "var(--q-surface)" };
+  const hair = "color-mix(in srgb, var(--q-text) 10%, transparent)";
+  const reasons = completion.reasons?.length ? completion.reasons : p.highlights;
+  const paths = p.paths ?? [];
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-7 pb-4 animate-slide-up">
+      {/* 1 · análise concluída */}
       <div className="space-y-3 text-center">
-        <span className="inline-block rounded-full px-3 py-1 text-xs font-semibold" style={{ background: "color-mix(in srgb, var(--q-accent) 12%, transparent)", color: "var(--q-accent)" }}>
-          Seu perfil: {p.name}
+        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ background: "color-mix(in srgb, var(--q-accent) 14%, transparent)", ...accent }}>
+          <CircleCheck className="size-3.5" /> {page?.eyebrow || "Análise concluída"}
         </span>
+        {page?.headline && <p className="text-[1.05em] font-semibold leading-snug" style={{ color: "var(--q-muted)" }}>{page.headline}</p>}
+      </div>
+
+      {/* 2 · perfil identificado */}
+      <div className="rounded-[calc(var(--q-radius)+4px)] border p-5 text-center" style={{ borderColor: "color-mix(in srgb, var(--q-accent) 45%, transparent)", background: "radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--q-accent) 14%, transparent), transparent 70%), var(--q-surface)" }}>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: "var(--q-muted)" }}>Seu perfil</p>
+        <h1 className="mt-1 text-[1.6em] font-black leading-tight tracking-tight" style={accent}>{p.name}</h1>
         {p.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.imageUrl} alt="" className="w-full rounded-[var(--q-radius)] object-cover max-h-60" />
+          <img src={p.imageUrl} alt="" className="mt-3 w-full rounded-[var(--q-radius)] object-cover max-h-60" />
         )}
-        <h1 className="text-[1.6em] font-bold leading-tight tracking-tight">{p.title || p.name}</h1>
-        {p.subtitle && <p className="text-[1.05em]" style={{ color: "var(--q-muted)" }}>{p.subtitle}</p>}
+        {p.title && <p className="mt-3 text-[1.08em] font-bold leading-snug">{p.title}</p>}
+        {(p.subtitle || p.description) && <p className="mt-2 text-[0.95em] leading-relaxed" style={{ color: "var(--q-muted)" }}>{p.subtitle || p.description}</p>}
       </div>
-      {p.description && <div className="space-y-3"><Paragraphs text={p.description} /></div>}
-      {p.highlights.length > 0 && (
-        <div className="rounded-[var(--q-radius)] p-5" style={{ background: "var(--q-surface)" }}>
-          <p className="mb-3 text-sm font-semibold">O que suas respostas indicam</p>
-          <ul className="space-y-2">
-            {p.highlights.map((h, i) => (
-              <li key={i} className="flex gap-2.5 text-[0.95em]"><Check className="mt-0.5 size-4 shrink-0" style={{ color: "var(--q-accent)" }} />{h}</li>
+
+      {/* 3 · por que combina (respostas reais) */}
+      {reasons.length > 0 && (
+        <div className="rounded-[var(--q-radius)] p-5" style={surface}>
+          <p className="mb-3 text-[0.95em] font-bold">{page?.reasonsTitle || "O que suas respostas indicam"}</p>
+          <ul className="space-y-2.5">
+            {reasons.map((r, i) => (
+              <li key={i} className="flex gap-2.5 text-[0.95em] leading-snug">
+                <Check className="mt-0.5 size-4 shrink-0" style={accent} strokeWidth={3} />
+                {r}
+              </li>
             ))}
           </ul>
         </div>
       )}
-      {p.recommendations.length > 0 && (
+
+      {/* 4 · caminhos recomendados */}
+      {paths.length > 0 && (
+        <div>
+          <p className="mb-3 text-[0.95em] font-bold">{page?.pathsTitle || "Caminhos recomendados"}</p>
+          <div className="space-y-3">
+            {paths.map((path, i) => (
+              <div key={i} className="rounded-[var(--q-radius)] border p-4" style={{ borderColor: hair, ...surface }}>
+                <div className="flex items-start gap-3">
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full text-[13px] font-black" style={{ background: "var(--q-accent)", color: "var(--q-accent-text)" }}>{i + 1}</span>
+                  <div className="min-w-0">
+                    <p className="font-bold leading-snug">{path.title}</p>
+                    {path.how && <p className="mt-1 text-[0.9em] leading-relaxed" style={{ color: "var(--q-muted)" }}>{path.how}</p>}
+                  </div>
+                </div>
+                <dl className="mt-3 grid gap-2 text-[0.86em]">
+                  {path.needs && <div className="flex gap-2"><dt className="shrink-0 font-semibold">Para começar:</dt><dd style={{ color: "var(--q-muted)" }}>{path.needs}</dd></div>}
+                  {path.challenge && <div className="flex gap-2"><dt className="shrink-0 font-semibold">Desafio:</dt><dd style={{ color: "var(--q-muted)" }}>{path.challenge}</dd></div>}
+                  {path.firstStep && <div className="flex gap-2"><dt className="shrink-0 font-semibold" style={accent}>1º passo:</dt><dd>{path.firstStep}</dd></div>}
+                </dl>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* compatibilidade com perfis antigos (sem caminhos) */}
+      {paths.length === 0 && p.recommendations.length > 0 && (
         <div>
           <p className="mb-3 text-sm font-semibold">Recomendações</p>
           <ol className="space-y-2.5">
@@ -514,14 +583,37 @@ function ResultView({ completion, leadSlot, disclaimer }: { completion: Completi
         </div>
       )}
       {p.content && <div className="space-y-3"><Paragraphs text={p.content} /></div>}
+
+      {/* 5 · primeiro passo prático */}
+      {p.firstStep && (
+        <div className="flex gap-3 rounded-[var(--q-radius)] border-l-4 p-4" style={{ borderColor: "var(--q-accent)", ...surface }}>
+          <Flag className="mt-0.5 size-5 shrink-0" style={accent} />
+          <div>
+            <p className="text-[0.95em] font-bold">{page?.firstStepTitle || "Seu primeiro passo"}</p>
+            <p className="mt-1 text-[0.92em] leading-relaxed" style={{ color: "var(--q-muted)" }}>{p.firstStep}</p>
+          </div>
+        </div>
+      )}
+
       {leadSlot}
-      <a
-        href={completion.ctaHref}
-        className="block w-full rounded-[var(--q-radius)] px-6 py-4 text-center text-base font-semibold transition active:scale-[0.99]"
-        style={{ background: "var(--q-accent)", color: "var(--q-accent-text)" }}
-      >
-        {p.ctaLabel || "Continuar"}
-      </a>
+
+      {/* 6 · transição comercial */}
+      <div className="space-y-4 pt-2 text-center">
+        {page?.transitionTitle && (
+          <div className="space-y-2">
+            <Sparkles className="mx-auto size-5" style={accent} />
+            <p className="text-[1.3em] font-black leading-tight tracking-tight">{page.transitionTitle}</p>
+            {page.transitionText && <p className="text-[0.95em] leading-relaxed" style={{ color: "var(--q-muted)" }}>{page.transitionText}</p>}
+          </div>
+        )}
+        <a
+          href={completion.ctaHref}
+          className="flex w-full items-center justify-center gap-2 rounded-[var(--q-radius)] px-6 py-4 text-center text-[0.95em] font-extrabold uppercase tracking-wide transition active:scale-[0.99]"
+          style={{ background: "var(--q-accent)", color: "var(--q-accent-text)", boxShadow: "0 12px 30px -12px color-mix(in srgb, var(--q-accent) 75%, transparent)" }}
+        >
+          {p.ctaLabel || "Continuar"} <ArrowRight className="size-4" />
+        </a>
+      </div>
       {disclaimer && <p className="text-center text-[11px]" style={{ color: "var(--q-muted)" }}>{disclaimer}</p>}
     </div>
   );

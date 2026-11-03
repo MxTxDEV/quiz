@@ -121,3 +121,12 @@ export async function manualPurchaseAction(input: { campaignId: string; external
     touch(input.campaignId);
   });
 }
+
+export async function applyTemplateAction(id: string, key: string) {
+  return run("campaigns.applyTemplate", async () => {
+    await assertUser("editor");
+    const { applyBuiltinTemplate } = await import("@/lib/services/campaigns");
+    await applyBuiltinTemplate(uuid.parse(id), z.string().max(60).parse(key));
+    touch(id);
+  });
+}

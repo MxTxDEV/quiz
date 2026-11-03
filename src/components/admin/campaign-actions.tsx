@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Archive, Copy, Eye, Link2, MoreHorizontal, Pause, Rocket, Save, Trash2, Undo2 } from "lucide-react";
+import { Archive, Copy, Eye, Link2, MoreHorizontal, Pause, RefreshCcw, Rocket, Save, Trash2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dropdown, DropdownContent, DropdownItem, DropdownSeparator, DropdownTrigger } from "@/components/ui/dropdown";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { Notice } from "@/components/ui/misc";
 import {
+  applyTemplateAction,
   deleteCampaignAction,
   duplicateCampaignAction,
   publishCampaignAction,
@@ -94,6 +95,14 @@ export function CampaignMenu({
               <Link2 /> Copiar link
             </DropdownItem>
           )}
+          <DropdownItem
+            onSelect={() => {
+              if (!window.confirm("Atualizar o RASCUNHO desta campanha com a versão mais recente do modelo Rota Invisível?\n\nSubstitui quiz, perfis, regras, resultado e página de vendas. Mantém checkout, preço, pixel e captura de leads. Nada vai ao ar até você publicar.")) return;
+              act(() => applyTemplateAction(id, "rota-invisivel"), "Rascunho atualizado. Revise e clique em Publicar alterações.");
+            }}
+          >
+            <RefreshCcw /> Atualizar com o modelo Rota Invisível
+          </DropdownItem>
           <DropdownSeparator />
           {status !== "published" && <DropdownItem onSelect={() => publish(id)}><Rocket /> Publicar</DropdownItem>}
           {status === "published" && <DropdownItem onSelect={() => act(() => setStatusAction(id, "paused"), "Campanha pausada")}><Pause /> Pausar</DropdownItem>}

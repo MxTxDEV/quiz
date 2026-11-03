@@ -95,7 +95,15 @@ export type Resolution = {
   attributes: Attributes;
   score: number;
   tags: string[];
+  /** justificativas do resultado, tiradas das respostas reais (ver quiz.result.reasons) */
+  reasons: string[];
 };
+
+/** Frases de "por que combina com você": as primeiras cuja condição bate com as respostas. */
+export function resultReasons(config: CampaignConfig, ctx: EvaluationContext): string[] {
+  const r = config.quiz.result;
+  return r.reasons.filter((x) => x.text.trim() && evaluateGroup(x.when, ctx)).slice(0, r.maxReasons).map((x) => x.text);
+}
 
 /**
  * Executa as regras na ordem configurada: a primeira regra atendida define o perfil.
@@ -110,8 +118,8 @@ export function resolveProfile(config: CampaignConfig, answers: Answers): Resolu
     if (!rule.enabled) continue;
     const profile = byId.get(rule.profileId);
     if (!profile) continue;
-    if (evaluateGroup(rule.when, ctx)) return { profile, matchedRuleId: rule.id, attributes, score, tags };
+    if (evaluateGroup(rule.when, ctx)) return { profile, matchedRuleId: rule.id, attributes, score, tags, reasons: resultReasons(config, ctx) };
   }
   const fallback = config.profiles.find((p) => p.isDefault) ?? config.profiles[0] ?? null;
-  return { profile: fallback, matchedRuleId: null, attributes, score, tags };
+  return { profile: fallback, matchedRuleId: null, attributes, score, tags, reasons: resultReasons(config, ctx) };
 }

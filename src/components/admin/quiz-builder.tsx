@@ -200,6 +200,21 @@ function IntroEditor({ quiz, onChange }: { quiz: Quiz; onChange: (q: Quiz) => vo
         </CardContent>
       </Card>
       <Card>
+        <CardHeader><CardTitle>Página de resultado</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Selo"><Input value={quiz.result.eyebrow} onChange={(e) => onChange({ ...quiz, result: { ...quiz.result, eyebrow: e.target.value } })} /></Field>
+            <Field label="Título das justificativas"><Input value={quiz.result.reasonsTitle} onChange={(e) => onChange({ ...quiz, result: { ...quiz.result, reasonsTitle: e.target.value } })} /></Field>
+          </div>
+          <Field label="Frase de abertura"><Input value={quiz.result.headline} onChange={(e) => onChange({ ...quiz, result: { ...quiz.result, headline: e.target.value } })} /></Field>
+          <Field label="Título da transição para a oferta"><Textarea rows={2} value={quiz.result.transitionTitle} onChange={(e) => onChange({ ...quiz, result: { ...quiz.result, transitionTitle: e.target.value } })} /></Field>
+          <Field label="Texto da transição"><Textarea rows={2} value={quiz.result.transitionText} onChange={(e) => onChange({ ...quiz, result: { ...quiz.result, transitionText: e.target.value } })} /></Field>
+          <p className="text-[13px] text-muted-foreground">
+            As justificativas (“Por que esse perfil combina com você”) são calculadas a partir das respostas: {quiz.result.reasons.length} frases configuradas, exibindo as {quiz.result.maxReasons} primeiras que combinam. Caminhos e primeiro passo ficam em cada perfil, na aba Resultados e regras.
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
         <CardHeader><CardTitle>Comportamento</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <SwitchRow label="Barra de progresso" checked={st.showProgress} onCheckedChange={(v) => setSettings({ showProgress: v })} />

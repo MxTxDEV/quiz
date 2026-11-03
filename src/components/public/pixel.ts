@@ -18,8 +18,23 @@ const metaMap: Record<string, string | null> = {
 };
 const standardMeta = new Set(["Lead", "ViewContent", "InitiateCheckout", "CompleteRegistration"]);
 
-export function trackThirdParty(event: string, params: { profile?: string | null; value?: number; currency?: string } = {}) {
-  if (typeof window === "undefined") return;
+// Eventos disparados antes de o Pixel/GA terminarem de carregar ficam numa fila e são enviados assim que
+// eles existirem (antes, eram descartados em silêncio — ex.: ViewContent ao abrir a página).
+const pending: { event: string; params: Parameters<typeof trackThirdParty>[1] }[] = [];
+let flushTimer: ReturnType<typeof setTimeout> | null = null;
+let tries = 0;
+
+function flush() {
+  flushTimer = null;
+  const w = window as W;
+  if (!w.fbq && !w.gtag && !w.dataLayer && tries++ < 40) {
+    flushTimer = setTimeout(flush, 250); // até ~10 s esperando os scripts
+    return;
+  }
+  for (const item of pending.splice(0)) send(item.event, item.params);
+}
+
+function send(event: string, params: { profile?: string | null; value?: number; currency?: string } = {}) {
   const w = window as W;
   const safe: Record<string, unknown> = {};
   if (params.profile) safe.content_category = params.profile;
@@ -35,4 +50,24 @@ export function trackThirdParty(event: string, params: { profile?: string | null
   } catch {
     // ferramentas de terceiros nunca podem quebrar o quiz
   }
+}
+
+/** Eventos que só fazem sentido uma vez por visita (não duplicar ao recarregar ou clicar de novo). */
+const ONCE = new Set(["quiz_started", "quiz_completed", "sales_page_view", "offer_viewed", "purchase_button_click"]);
+
+export function trackThirdParty(event: string, params: { profile?: string | null; value?: number; currency?: string } = {}) {
+  if (typeof window === "undefined") return;
+  if (ONCE.has(event)) {
+    try {
+      const k = `fos_ev_${event}_${location.pathname}`;
+      if (sessionStorage.getItem(k)) return;
+      sessionStorage.setItem(k, "1");
+    } catch {
+      // sem sessionStorage (modo privado): segue sem a proteção
+    }
+  }
+  const w = window as W;
+  if (w.fbq || w.gtag || w.dataLayer) return send(event, params);
+  pending.push({ event, params });
+  if (!flushTimer) flushTimer = setTimeout(flush, 250);
 }

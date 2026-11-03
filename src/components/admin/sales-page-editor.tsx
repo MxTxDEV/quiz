@@ -413,6 +413,35 @@ function BlockEditor({
             <Notice>Os bônus exibidos são os cadastrados na aba Oferta.</Notice>
           </>
         )}
+        {b.type === "preview" && (
+          <>
+            <Field label="Chamada (acima do título)"><Input value={b.eyebrow} onChange={(e) => set({ eyebrow: e.target.value })} /></Field>
+            <Field label="Título"><Input value={b.title} onChange={(e) => set({ title: e.target.value })} /></Field>
+            <Field label="Subtítulo"><Textarea rows={2} value={b.subtitle} onChange={(e) => set({ subtitle: e.target.value })} /></Field>
+            <Notice tone="warning">Use somente recortes de páginas reais do material entregue. As prévias do Rota Invisível são geradas com <code>node ebook/previa.mjs</code>.</Notice>
+            <ObjectListEditor
+              value={b.items}
+              onChange={(items) => set({ items })}
+              empty={{ title: "", caption: "", imageUrl: "" }}
+              fields={[
+                { key: "title", label: "Título do trecho" },
+                { key: "caption", label: "Legenda", multiline: true },
+                { key: "imageUrl", label: "Imagem do trecho (URL ou /produto/previa/arquivo.jpg)" },
+              ]}
+              addLabel="Adicionar trecho"
+            />
+            <Field label="Observação (rodapé)"><Input value={b.note} onChange={(e) => set({ note: e.target.value })} /></Field>
+          </>
+        )}
+        {b.type === "fit" && (
+          <>
+            <Field label="Título"><Input value={b.title} onChange={(e) => set({ title: e.target.value })} /></Field>
+            <Field label="Título da coluna “é para você”"><Input value={b.yesTitle} onChange={(e) => set({ yesTitle: e.target.value })} /></Field>
+            <StringListEditor value={b.yes} onChange={(yes) => set({ yes })} placeholder="Quer começar uma atividade de renda extra" />
+            <Field label="Título da coluna “não é para você”"><Input value={b.noTitle} onChange={(e) => set({ noTitle: e.target.value })} /></Field>
+            <StringListEditor value={b.no} onChange={(no) => set({ no })} placeholder="Procura renda garantida" />
+          </>
+        )}
         {b.type === "reviews" && (
           <>
             <Field label="Título"><Input value={b.title} onChange={(e) => set({ title: e.target.value })} /></Field>

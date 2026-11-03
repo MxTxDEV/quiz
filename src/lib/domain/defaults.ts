@@ -77,6 +77,8 @@ export function newProfile(name = "Novo perfil", isDefault = false): Profile {
     ctaLabel: "Ver recomendação",
     ctaTarget: "sales_page",
     isDefault,
+    paths: [],
+    firstStep: "",
   };
 }
 
@@ -94,6 +96,8 @@ export const blockLabels: Record<BlockType, string> = {
   bonuses: "Bônus",
   testimonials: "Depoimentos",
   reviews: "Avaliações de compradores (automático)",
+  preview: "Prévia do material (trechos reais)",
+  fit: "Para quem é / não é",
   faq: "Perguntas frequentes",
   offerCard: "Card da oferta",
   price: "Preço",

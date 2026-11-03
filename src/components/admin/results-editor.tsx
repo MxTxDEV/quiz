@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, Notice } from "@/components/ui/misc";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StringListEditor } from "@/components/admin/list-editor";
+import { ObjectListEditor, StringListEditor } from "@/components/admin/list-editor";
 import { SortableList } from "@/components/admin/sortable";
 import { SaveBar, useSections } from "@/components/admin/use-section";
 import { newProfile } from "@/lib/domain/defaults";
@@ -120,7 +120,29 @@ function ProfilesEditor({ profiles, rules, onChange }: { profiles: Profile[]; ru
             <CardContent><StringListEditor value={current.highlights} onChange={(v) => update(current.id, { highlights: v })} placeholder="Ex.: Pouco tempo disponível por dia" /></CardContent>
           </Card>
           <Card>
-            <CardHeader><CardTitle>Recomendações</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Caminhos recomendados</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-[13px] text-muted-foreground">Até 4 caminhos, cada um com como funciona, o que precisa, principal dificuldade e primeiro passo. Recomende só caminhos compatíveis com as respostas que levam a este perfil.</p>
+              <ObjectListEditor
+                value={current.paths}
+                onChange={(paths) => update(current.id, { paths: paths.slice(0, 4) })}
+                empty={{ title: "", how: "", needs: "", challenge: "", firstStep: "" }}
+                fields={[
+                  { key: "title", label: "Caminho" },
+                  { key: "how", label: "Como funciona", multiline: true },
+                  { key: "needs", label: "O que precisa para começar" },
+                  { key: "challenge", label: "Principal dificuldade" },
+                  { key: "firstStep", label: "Primeiro passo" },
+                ]}
+                addLabel="Adicionar caminho"
+              />
+              <Field label="Primeiro passo prático (destaque)" hint="Uma ação pequena que a pessoa consegue fazer hoje, sem entregar o conteúdo do produto.">
+                <Textarea rows={3} value={current.firstStep} onChange={(e) => update(current.id, { firstStep: e.target.value })} />
+              </Field>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Recomendações (formato antigo, usado quando não há caminhos)</CardTitle></CardHeader>
             <CardContent><StringListEditor value={current.recommendations} onChange={(v) => update(current.id, { recommendations: v })} placeholder="Ex.: Comece por encomendas" /></CardContent>
           </Card>
           <Card>

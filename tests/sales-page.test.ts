@@ -23,40 +23,34 @@ function personalized(c: CampaignConfig) {
 
 describe("visibleBlocks — grupos de variação", () => {
   const blocks = rota().salesPage.blocks;
-  const heroes = (pid: string | null) => visibleBlocks(blocks, pid).filter((b) => b.type === "hero") as Extract<Block, { type: "hero" }>[];
-
   it("exibe exatamente um hero por visitante", () => {
-    for (const pid of [null, "vendedor", "servicos", "conteudo", "explorador"]) expect(heroes(pid)).toHaveLength(1);
-  });
-  it("perfil com variação recebe a sua; sem variação recebe a versão geral", () => {
-    expect(heroes("vendedor")[0].headline).toMatch(/estoque/);
-    expect(heroes("servicos")[0].headline).toMatch(/sabe fazer/);
-    expect(heroes(null)[0].headline).toMatch(/^Você não precisa de mais dinheiro/);
-    expect(heroes("explorador")[0].headline).toMatch(/^Você não precisa de mais dinheiro/);
+    for (const pid of [null, "vendedor", "servicos_locais", "conteudo", "explorador"])
+      expect(visibleBlocks(blocks, pid).filter((b) => b.type === "hero")).toHaveLength(1);
   });
   it("blocos sem grupo seguem a regra de visibilidade por perfil", () => {
     const b1 = { ...blocks[0], id: "x", group: "", profileIds: ["vendedor"] } as Block;
-    expect(visibleBlocks([b1], "servicos")).toHaveLength(0);
+    expect(visibleBlocks([b1], "servicos_locais")).toHaveLength(0);
     expect(visibleBlocks([b1], "vendedor")).toHaveLength(1);
     expect(visibleBlocks([b1], null)).toHaveLength(0);
   });
 });
 
-describe("resultado personalizado", () => {
+describe("bloco personalizado da página de vendas", () => {
   it("rótulos vêm das respostas reais; perguntas não respondidas são omitidas", () => {
     const c = rota();
     const a = answersFor("vendas");
     expect(answerLabel(c.quiz, a, "capital")).toBe("Até R$ 50");
-    expect(answerLabel(c.quiz, a, "tempo")).toBe("Até 1 hora por dia");
+    expect(answerLabel(c.quiz, a, "tempo")).toBe("Até 1 hora");
     expect(answerLabel(c.quiz, { ...a, capital: undefined as unknown as string }, "capital")).toBeNull();
     expect(answerLabel(c.quiz, a, "inexistente")).toBeNull();
   });
 
   it.each([
     ["vendas", "vendedor", "Vender sem montar estoque"],
-    ["servicos", "servicos", "Transformar habilidades em serviços"],
+    ["servicos", "servicos_locais", "Transformar habilidades em serviços"],
+    ["internet", "servicos_digitais", "Trabalhar pela internet com ferramentas gratuitas"],
     ["conteudo", "conteudo", "Do conteúdo à monetização"],
-    ["indefinido", "explorador", "Comparar antes de escolher"],
+    ["indefinido", "iniciante", "Comparar antes de escolher"],
   ])("preferência %s → perfil %s com interpretação coerente", (pref, profileId, insight) => {
     const c = rota();
     const a = answersFor(pref);
@@ -65,20 +59,10 @@ describe("resultado personalizado", () => {
     const titles = matchedInsights(personalized(c), { quiz: c.quiz, answers: a, attributes: r.attributes, score: r.score }).map((i) => i.title);
     expect(titles[0]).toBe(insight);
     expect(titles).toContain("Começar com pouco investimento"); // capital até R$ 50
-    expect(titles.length).toBeLessThanOrEqual(4);
+    expect(titles.length).toBeLessThanOrEqual(3);
   });
 
-  it("interpretações acompanham as respostas (sem até R$ 50 → sem baixo investimento)", () => {
-    const c = rota();
-    const a = answersFor("vendas", { capital: "capital_mais_300", tempo: "tempo_mais_3h", dificuldade: "dificuldade_clientes" });
-    const r = resolveProfile(c, a);
-    const titles = matchedInsights(personalized(c), { quiz: c.quiz, answers: a, attributes: r.attributes, score: r.score }).map((i) => i.title);
-    expect(titles).not.toContain("Começar com pouco investimento");
-    expect(titles).not.toContain("Atividades para períodos curtos");
-    expect(titles).toContain("Encontrar os primeiros clientes");
-  });
-
-  it("modelo não inventa garantia, preço anterior nem depoimentos", () => {
+  it("modelo não inventa garantia, preço anterior nem depoimentos; checkout e preço preservados", () => {
     const c = rota();
     expect(c.offer.guarantee).toBe("");
     expect(c.offer.guaranteeDays).toBeNull();
@@ -90,15 +74,22 @@ describe("resultado personalizado", () => {
   });
 });
 
-describe("página resumida com movimento", () => {
-  it("modelo resumido: sem blocos redundantes e com efeitos ligados", () => {
-    const c = rota();
-    const types = c.salesPage.blocks.filter((b) => !b.group || b.group === "hero").map((b) => b.type);
-    expect(c.salesPage.effects).toBe(true);
-    expect(types.filter((t) => t === "benefits")).toHaveLength(0);
-    expect(types).not.toContain("guarantee");
-    const faq = c.salesPage.blocks.find((b) => b.type === "faq") as Extract<Block, { type: "faq" }>;
-    expect(faq.items.length).toBeLessThanOrEqual(5);
+describe("página de vendas reestruturada", () => {
+  it("segue a estrutura: hero → problema → solução → prévia → capítulos → bônus → para quem → oferta → FAQ → CTA", () => {
+    const types = rota().salesPage.blocks.map((b) => b.type);
+    const order = ["hero", "text", "preview", "content", "bonuses", "fit", "offerCard", "faq", "ctaSection", "footer"];
+    let last = -1;
+    for (const t of order) {
+      const i = types.indexOf(t as Block["type"], last + 1);
+      expect(i, t).toBeGreaterThan(last);
+      last = i;
+    }
+  });
+  it("prévia usa somente recortes reais existentes no projeto", async () => {
+    const { existsSync } = await import("node:fs");
+    const prev = rota().salesPage.blocks.find((b) => b.type === "preview") as Extract<Block, { type: "preview" }>;
+    expect(prev.items).toHaveLength(5);
+    for (const it of prev.items) expect(existsSync(`public${it.imageUrl}`), it.imageUrl).toBe(true);
   });
   it("campanhas antigas ganham os efeitos sem precisar republicar", async () => {
     const { parseConfig } = await import("@/lib/domain/config");

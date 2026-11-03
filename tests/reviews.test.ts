@@ -72,3 +72,23 @@ describe("avaliações de compradores", () => {
     expect(render({ reviews: [], reviewCount: 0, average: null, buyers: 25 })).toContain("25 pessoas já acessaram");
   });
 });
+
+describe("atualizar campanha existente com o modelo", () => {
+  it("troca quiz/perfis/página e preserva checkout, preço e pixel", async () => {
+    const { applyBuiltinTemplate, getCampaign, saveCampaignSection } = await import("@/lib/services/campaigns");
+    const c = await rotaPublished();
+    const before = (await getCampaign(c.id))!.config;
+    await saveCampaignSection(c.id, "offer", { ...before.offer, checkoutUrl: "https://pay.kiwify.com.br/OUTRO", priceCents: 2490 });
+    await saveCampaignSection(c.id, "tracking", { ...before.tracking, metaPixelId: "1417167073768708" });
+    await applyBuiltinTemplate(c.id, "rota-invisivel");
+    const after = (await getCampaign(c.id))!.config;
+    expect(after.offer.checkoutUrl).toBe("https://pay.kiwify.com.br/OUTRO");
+    expect(after.offer.priceCents).toBe(2490);
+    expect(after.tracking.metaPixelId).toBe("1417167073768708");
+    expect(after.profiles).toHaveLength(7);
+    expect(after.quiz.result.reasons.length).toBeGreaterThan(5);
+    expect(after.salesPage.blocks.some((b) => b.type === "preview")).toBe(true);
+    // versão publicada não muda até publicar
+    expect((await getPublishedCampaignBySlug("rota"))!.config.offer.checkoutUrl).toBe("https://pay.kiwify.com.br/7fyz1pO");
+  });
+});

@@ -13,6 +13,11 @@ const url = z
   .string()
   .max(2000)
   .refine((v) => v === "" || /^https?:\/\//i.test(v), "Use uma URL iniciando com http:// ou https://");
+/** imagem: URL completa ou arquivo do próprio site ("/produto/...") */
+const assetUrl = z
+  .string()
+  .max(2000)
+  .refine((v) => v === "" || /^https?:\/\//i.test(v) || /^\/(?!\/)/.test(v), "Use uma URL iniciando com https:// ou um caminho do site iniciando com /");
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Cor inválida (use #RRGGBB)");
 const cents = z.number().int().min(0).max(100_000_000);
 
@@ -92,6 +97,21 @@ export const quizSchema = z.object({
     })
     .default({ enabled: true, title: "", subtitle: "", imageUrl: "", ctaLabel: "Começar", disclaimer: "" }),
   questions: z.array(questionSchema).max(60).default([]),
+  /** textos da página de resultado + justificativas calculadas a partir das respostas */
+  result: z
+    .object({
+      eyebrow: z.string().max(60).default("Análise concluída"),
+      headline: shortText.default("Encontramos caminhos que podem combinar com sua realidade."),
+      reasonsTitle: shortText.default("Por que esse perfil combina com você"),
+      /** frases exibidas quando a condição bate; aparecem as primeiras `maxReasons` */
+      reasons: z.array(z.lazy(() => reasonSchema)).max(40).default([]),
+      maxReasons: z.number().int().min(1).max(6).default(3),
+      pathsTitle: shortText.default("Caminhos recomendados para você"),
+      firstStepTitle: shortText.default("Seu primeiro passo prático"),
+      transitionTitle: shortText.default(""),
+      transitionText: z.string().max(600).default(""),
+    })
+    .default({ eyebrow: "Análise concluída", headline: "Encontramos caminhos que podem combinar com sua realidade.", reasonsTitle: "Por que esse perfil combina com você", reasons: [], maxReasons: 3, pathsTitle: "Caminhos recomendados para você", firstStepTitle: "Seu primeiro passo prático", transitionTitle: "", transitionText: "" }),
   settings: z
     .object({
       showProgress: z.boolean().default(true),
@@ -147,6 +167,13 @@ export const conditionGroupSchema: z.ZodType<ConditionGroup> = z.lazy(() =>
   }),
 );
 
+export const reasonSchema = z.object({
+  id,
+  text: z.string().max(300).default(""),
+  when: conditionGroupSchema,
+});
+export type Reason = z.infer<typeof reasonSchema>;
+
 export const ruleSchema = z.object({
   id,
   name: shortText.default(""),
@@ -157,6 +184,19 @@ export const ruleSchema = z.object({
 export type Rule = z.infer<typeof ruleSchema>;
 
 // ---------- Perfis / resultados ----------
+
+export const pathSchema = z.object({
+  title: shortText.min(1),
+  /** como funciona */
+  how: z.string().max(500).default(""),
+  /** o que é necessário para começar */
+  needs: z.string().max(300).default(""),
+  /** principal dificuldade */
+  challenge: z.string().max(300).default(""),
+  /** primeiro passo */
+  firstStep: z.string().max(300).default(""),
+});
+export type ResultPath = z.infer<typeof pathSchema>;
 
 export const profileSchema = z.object({
   id,
@@ -171,6 +211,10 @@ export const profileSchema = z.object({
   ctaLabel: z.string().max(60).default("Ver recomendação"),
   ctaTarget: z.enum(["sales_page", "checkout"]).default("sales_page"),
   isDefault: z.boolean().default(false),
+  /** caminhos recomendados para este perfil (página de resultado) */
+  paths: z.array(pathSchema).max(4).default([]),
+  /** primeira ação prática sugerida no resultado */
+  firstStep: z.string().max(600).default(""),
 });
 export type Profile = z.infer<typeof profileSchema>;
 
@@ -285,6 +329,25 @@ export const blockSchema = z.discriminatedUnion("type", [
     bullets: z.array(z.string().max(200)).max(12).default([]),
     /** exibe o mockup do produto ao lado do texto */
     showMockup: z.boolean().default(false),
+  }),
+  z.object({
+    ...blockBase,
+    type: z.literal("preview"),
+    eyebrow: z.string().max(80).default("Veja por dentro"),
+    title: shortText.default("Uma amostra real do material"),
+    subtitle: z.string().max(500).default(""),
+    /** recortes de páginas reais do produto (imagens) */
+    items: z.array(z.object({ title: shortText, caption: z.string().max(300).default(""), imageUrl: assetUrl.default("") })).max(10).default([]),
+    note: z.string().max(300).default(""),
+  }),
+  z.object({
+    ...blockBase,
+    type: z.literal("fit"),
+    title: shortText.default("Para quem é o material"),
+    yesTitle: shortText.default("É para você se"),
+    yes: z.array(z.string().max(200)).max(12).default([]),
+    noTitle: shortText.default("Não é para você se"),
+    no: z.array(z.string().max(200)).max(12).default([]),
   }),
   z.object({
     ...blockBase,
