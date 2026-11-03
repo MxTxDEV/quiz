@@ -10,6 +10,7 @@
 //   - [ ] item          → checklist
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { marked } from "marked";
 
@@ -18,8 +19,6 @@ const require = createRequire(import.meta.url);
 
 /** Pasta pública com caminho não adivinhável (o link é entregue só a quem comprou). */
 const ACCESS_DIR = "acesso/rota-invisivel-k7q2m9xv4t";
-const outDir = path.join(root, "..", "public", ACCESS_DIR);
-const BASE = `/${ACCESS_DIR}/`; // links absolutos: funcionam com ou sem barra final
 
 const BOOKS = [
   {
@@ -35,6 +34,72 @@ const BOOKS = [
   { file: "bonus-kit-ferramentas.md", slug: "bonus-kit-ferramentas", label: "Bônus 02", title: "Kit de ferramentas gratuitas", subtitle: "Recursos para criar, divulgar, vender e se organizar sem gastar.", pdf: "Bonus-02-Kit-de-Ferramentas-Gratuitas.pdf" },
   { file: "bonus-guia-clientes.md", slug: "bonus-guia-clientes", label: "Bônus 03", title: "Guia para conseguir clientes", subtitle: "Scripts, abordagens e rotinas para encontrar seus primeiros compradores.", pdf: "Bonus-03-Guia-para-Conseguir-Clientes.pdf" },
   { file: "bonus-plano-30-dias.md", slug: "bonus-plano-30-dias", label: "Bônus 04", title: "Plano de execução de 30 dias", subtitle: "Um roteiro diário para sair da ideia e colocar uma oportunidade em prática.", pdf: "Bonus-04-Plano-de-Execucao-30-Dias.pdf" },
+];
+
+/**
+ * Produtos entregues, cada um com a sua pasta (link) própria.
+ * Os order bumps são produtos separados na Kiwify: quem compra o bump recebe só o link dele.
+ */
+const PRODUCTS = [
+  {
+    accessDir: ACCESS_DIR,
+    books: BOOKS,
+    welcome: {
+      title: "Bem-vindo à sua rota.",
+      text: "Aqui está todo o material do Rota Invisível: o guia completo e os 4 bônus. Você pode ler online, no celular ou no computador, ou baixar os PDFs para ler quando quiser.",
+      steps: [
+        ["1 · Leia", "Comece pelo guia completo, na ordem dos capítulos."],
+        ["2 · Escolha", "Use os bônus para escolher sua ideia e montar sua abordagem."],
+        ["3 · Execute", "Siga o plano de 30 dias, um dia de cada vez."],
+      ],
+      sep: "Bônus",
+    },
+  },
+  {
+    accessDir: "acesso/calculadora-preco-cexjcg6epw",
+    books: [
+      {
+        file: "bump-calculadora-preco.md",
+        slug: "calculadora-preco-guia",
+        label: "Guia rápido",
+        title: "Calculadora de preço e lucro",
+        subtitle: "A planilha que mostra o preço certo, o lucro de cada venda e quanto sobrou no mês.",
+        pdf: "Calculadora-de-Preco-e-Lucro-Guia.pdf",
+      },
+    ],
+    xlsx: { file: "Calculadora-de-Preco-e-Lucro.xlsx", title: "Planilha Calculadora de Preço e Lucro", subtitle: "Abre no Excel, no Google Planilhas e no celular. Preencha as células laranja-claro." },
+    welcome: {
+      title: "Sua calculadora chegou.",
+      text: "Aqui estão a planilha Calculadora de Preço e Lucro e o guia rápido com três exemplos completos: produto, serviço e revenda.",
+      steps: [
+        ["1 · Baixe", "Baixe a planilha e salve uma cópia com o nome do seu negócio."],
+        ["2 · Preencha", "Escolha a aba do seu caso e troque os exemplos pelos seus números."],
+        ["3 · Compare", "Pesquise 5 ofertas parecidas e defina o seu preço de lançamento."],
+      ],
+    },
+  },
+  {
+    accessDir: "acesso/kit-divulgacao-zyuukvr6xb",
+    books: [
+      {
+        file: "bump-kit-divulgacao.md",
+        slug: "kit-divulgacao",
+        label: "Kit completo",
+        title: "Kit de divulgação pronto",
+        subtitle: "30 legendas, 20 status, bios, mensagens automáticas e roteiros de vídeo para adaptar e postar.",
+        pdf: "Kit-de-Divulgacao-Pronto.pdf",
+      },
+    ],
+    welcome: {
+      title: "Seu kit de divulgação chegou.",
+      text: "Textos prontos para o status, os stories, o feed e o WhatsApp Business. Troque os colchetes pelas suas informações e comece pela Semana 1.",
+      steps: [
+        ["1 · Perfil", "Escreva sua bio e configure as mensagens automáticas."],
+        ["2 · Separe", "Junte 7 fotos ou vídeos do seu trabalho ou do processo."],
+        ["3 · Poste", "Siga o calendário: uma legenda por dia, na ordem."],
+      ],
+    },
+  },
 ];
 
 const BOX = {
@@ -100,8 +165,10 @@ function renderBody(md) {
       );
     } else {
       const meta = BOX[type] ?? { icon: "•", label: type };
+      // scripts e exemplos preservam as quebras de linha (catálogos, roteiros com tempos)
+      const opts = type === "script" || type === "exemplo" ? { breaks: true } : undefined;
       out.push(
-        `<div class="box ${type}"><div class="box-title"><span class="ic">${meta.icon}</span>${esc(title || meta.label)}</div>${marked.parse(body)}</div>`,
+        `<div class="box ${type}"><div class="box-title"><span class="ic">${meta.icon}</span>${esc(title || meta.label)}</div>${marked.parse(body, opts)}</div>`,
       );
     }
   }
@@ -112,7 +179,7 @@ function renderBody(md) {
     .replace(/(<li class="task">[\s\S]*?)<\/li>/g, "$1</span></li>");
 }
 
-function buildBook(book) {
+function buildBook(book, BASE) {
   const md = readFileSync(path.join(root, "content", book.file), "utf8");
   // divide em capítulos pelos títulos de nível 1
   const parts = md.split(/^# /m);
@@ -161,9 +228,21 @@ ${web ? `<div class="topbar"><a class="brand" href="${BASE}">← Rota <span>Invi
   return { web: html(true), print: html(false) };
 }
 
-function indexPage() {
+function indexPage(product) {
+  const BASE = `/${product.accessDir}/`;
+  const { welcome: w, xlsx } = product;
   const css = readFileSync(path.join(root, "theme.css"), "utf8");
-  const [main, ...bonus] = BOOKS;
+  const [main, ...bonus] = product.books;
+  const sheetCard = xlsx
+    ? `
+    <article class="item">
+      <div class="mini sheet">${routeSvg(2)}<span class="mini-label">Planilha</span><span class="mini-title">.xlsx</span></div>
+      <div class="info">
+        <p class="lbl">Planilha</p><h2>${esc(xlsx.title)}</h2><p class="sub">${esc(xlsx.subtitle)}</p>
+        <div class="actions"><a class="primary" href="${BASE}${xlsx.file}" download>Baixar planilha</a></div>
+      </div>
+    </article>`
+    : "";
   const card = (b, big) => `
     <article class="item ${big ? "big" : ""}">
       <div class="mini">${routeSvg(1)}<span class="mini-label">${esc(b.label)}</span><span class="mini-title">${esc(b.title)}</span></div>
@@ -213,35 +292,43 @@ function indexPage() {
 }
 </style></head><body><div class="wrap">
 <div class="head"><div class="logo">Rota <span>Invisível</span></div></div>
-<section class="welcome"><div class="k">Área do aluno</div><h1>Bem-vindo à sua rota.</h1>
-<p>Aqui está todo o material do Rota Invisível: o guia completo e os 4 bônus. Você pode ler online, no celular ou no computador, ou baixar os PDFs para ler quando quiser.</p></section>
-<div class="steps"><div class="step"><b>1 · Leia</b>Comece pelo guia completo, na ordem dos capítulos.</div><div class="step"><b>2 · Escolha</b>Use os bônus para escolher sua ideia e montar sua abordagem.</div><div class="step"><b>3 · Execute</b>Siga o plano de 30 dias, um dia de cada vez.</div></div>
-<div class="list">${card(main, true)}</div>
-<div class="sep">Bônus</div>
-<div class="list">${bonus.map((b) => card(b, false)).join("")}</div>
+<section class="welcome"><div class="k">Área do aluno</div><h1>${esc(w.title)}</h1>
+<p>${esc(w.text)}</p></section>
+<div class="steps">${w.steps.map(([t, d]) => `<div class="step"><b>${esc(t)}</b>${esc(d)}</div>`).join("")}</div>
+<div class="list">${sheetCard}${card(main, !xlsx)}</div>
+${bonus.length ? `<div class="sep">${esc(w.sep ?? "Extras")}</div>
+<div class="list">${bonus.map((b) => card(b, false)).join("")}</div>` : ""}
 <p class="legal">Material educativo. Resultados financeiros não são garantidos e dependem de fatores individuais, como dedicação, contexto e aplicação. Este link é pessoal: não compartilhe.</p>
 </div></body></html>`;
 }
 
 // ---------------------------------------------------------------- execução
-if (existsSync(outDir)) rmSync(outDir, { recursive: true });
-mkdirSync(outDir, { recursive: true });
 const printDir = path.join(root, ".print");
 mkdirSync(printDir, { recursive: true });
-
 const only = process.argv[2];
-for (const b of BOOKS) {
-  const { web, print } = buildBook(b);
-  writeFileSync(path.join(outDir, `${b.slug}.html`), web);
-  writeFileSync(path.join(printDir, `${b.slug}.html`), print);
+const jobs = [];
+
+for (const product of PRODUCTS) {
+  const outDir = path.join(root, "..", "public", product.accessDir);
+  const BASE = `/${product.accessDir}/`; // links absolutos: funcionam com ou sem barra final
+  if (existsSync(outDir)) rmSync(outDir, { recursive: true });
+  mkdirSync(outDir, { recursive: true });
+  for (const b of product.books) {
+    const { web, print } = buildBook(b, BASE);
+    writeFileSync(path.join(outDir, `${b.slug}.html`), web);
+    writeFileSync(path.join(printDir, `${b.slug}.html`), print);
+    jobs.push({ b, outDir });
+  }
+  writeFileSync(path.join(outDir, "index.html"), indexPage(product));
+  if (product.xlsx) execFileSync("python3", [path.join(root, "planilha.py"), path.join(outDir, product.xlsx.file)], { stdio: "inherit" });
+  console.log(`Saída: public/${product.accessDir}/`);
 }
-writeFileSync(path.join(outDir, "index.html"), indexPage());
 
 if (only !== "--no-pdf") {
   const { chromium } = require("playwright");
   const browser = await chromium.launch();
   const page = await browser.newPage();
-  for (const b of BOOKS) {
+  for (const { b, outDir } of jobs) {
     await page.goto(`file://${path.join(printDir, `${b.slug}.html`)}`, { waitUntil: "load" });
     await page.pdf({
       path: path.join(outDir, b.pdf),
@@ -257,4 +344,3 @@ if (only !== "--no-pdf") {
   await browser.close();
 }
 rmSync(printDir, { recursive: true });
-console.log(`Saída: public/${ACCESS_DIR}/`);

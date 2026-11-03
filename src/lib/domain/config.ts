@@ -352,6 +352,17 @@ export const blockSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     ...blockBase,
+    type: z.literal("deliverables"),
+    eyebrow: z.string().max(80).default("O que você recebe"),
+    title: shortText.default("Tudo o que chega para você"),
+    subtitle: z.string().max(500).default(""),
+    /** imagem exibida na tela do celular (ex.: recorte real do material) */
+    screenImageUrl: assetUrl.default(""),
+    /** como o material é entregue */
+    formats: z.array(z.string().max(120)).max(8).default([]),
+  }),
+  z.object({
+    ...blockBase,
     type: z.literal("fit"),
     title: shortText.default("Para quem é o material"),
     yesTitle: shortText.default("É para você se"),
@@ -417,6 +428,8 @@ export const salesPageSchema = z.object({
   brand: brandSchema.default(brandSchema.parse({})),
   /** objetos flutuantes, fundo líquido e movimento ao rolar (respeita "reduzir movimento" do aparelho) */
   effects: z.boolean().default(true),
+  /** o link da campanha (/q/slug) pula o quiz e abre direto a página de vendas (UTMs e atribuição preservadas) */
+  skipQuiz: z.boolean().default(false),
   blocks: z.array(blockSchema).max(80).default([]),
 });
 export type SalesPage = z.infer<typeof salesPageSchema>;

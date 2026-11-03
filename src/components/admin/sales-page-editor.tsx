@@ -179,6 +179,17 @@ export function SalesPageEditor({
               </CardContent>
             </Card>
             <Card>
+              <CardHeader><CardTitle>Link do anúncio</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <SwitchRow
+                  label="Ir direto para a página de vendas (sem quiz)"
+                  description="O link da campanha (/q/…) passa a abrir a página de vendas. UTMs, origem da visita e atribuição da venda continuam funcionando. Vale depois de publicar."
+                  checked={salesPage.skipQuiz}
+                  onCheckedChange={(v) => s.setValue({ offer, salesPage: { ...salesPage, skipQuiz: v } })}
+                />
+              </CardContent>
+            </Card>
+            <Card>
               <CardHeader><CardTitle>Movimento</CardTitle></CardHeader>
               <CardContent>
                 <SwitchRow
@@ -431,6 +442,18 @@ function BlockEditor({
               addLabel="Adicionar trecho"
             />
             <Field label="Observação (rodapé)"><Input value={b.note} onChange={(e) => set({ note: e.target.value })} /></Field>
+          </>
+        )}
+        {b.type === "deliverables" && (
+          <>
+            <Field label="Chamada (acima do título)"><Input value={b.eyebrow} onChange={(e) => set({ eyebrow: e.target.value })} /></Field>
+            <Field label="Título"><Input value={b.title} onChange={(e) => set({ title: e.target.value })} /></Field>
+            <Field label="Subtítulo"><Textarea rows={2} value={b.subtitle} onChange={(e) => set({ subtitle: e.target.value })} /></Field>
+            <Field label="Imagem na tela do celular" hint="Recorte real do material, ex.: /produto/previa/capitulo-1.jpg. Vazio = sem celular.">
+              <Input value={b.screenImageUrl} onChange={(e) => set({ screenImageUrl: e.target.value })} />
+            </Field>
+            <div className="space-y-1.5"><p className="text-[13px] font-medium">Formato de entrega</p><StringListEditor value={b.formats} onChange={(formats) => set({ formats })} placeholder="Guia em PDF para baixar" /></div>
+            <Notice>O guia e os bônus listados vêm da aba Oferta.</Notice>
           </>
         )}
         {b.type === "fit" && (

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getPublishedCampaignBySlug } from "@/lib/services/campaigns";
 import { toPublicCampaign } from "@/lib/domain/public";
 import { LiveQuiz } from "@/components/public/live-quiz";
@@ -7,7 +7,7 @@ import { TrackingScripts } from "@/components/public/tracking-scripts";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -20,10 +20,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function PublicQuizPage({ params }: Props) {
-  const { slug } = await params;
+export default async function PublicQuizPage({ params, searchParams }: Props) {
+  const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const c = await getPublishedCampaignBySlug(slug);
   if (!c) notFound();
+  // campanha configurada para ir direto à página de vendas: mantém UTMs/fbclid no redirecionamento
+  if (c.config.salesPage.skipQuiz) {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(sp)) if (typeof v === "string" && k !== "s") qs.set(k, v.slice(0, 500));
+    redirect(`/q/${encodeURIComponent(slug)}/oferta${qs.size ? `?${qs}` : ""}`);
+  }
   return (
     <>
       <LiveQuiz campaign={toPublicCampaign(c)} />

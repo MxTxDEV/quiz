@@ -98,6 +98,7 @@ export const blockLabels: Record<BlockType, string> = {
   testimonials: "Depoimentos",
   reviews: "Avaliações de compradores (automático)",
   preview: "Prévia do material (trechos reais)",
+  deliverables: "Entregáveis (o que a pessoa recebe)",
   fit: "Para quem é / não é",
   faq: "Perguntas frequentes",
   offerCard: "Card da oferta",
@@ -117,6 +118,7 @@ const starters: { [K in BlockType]?: Record<string, unknown> } = {
   offerCard: { title: "Seu acesso" },
   ctaSection: { headline: "Chamada final", subheadline: "", ctaAction: "checkout" },
   testimonials: { title: "Depoimentos" },
+  deliverables: { formats: ["Guia em PDF para baixar", "Acesso pela área de membros", "Leitura no celular ou no computador", "Liberado após a confirmação do pagamento"] },
 };
 
 /** Novo bloco com os padrões do schema (fonte única de verdade). */

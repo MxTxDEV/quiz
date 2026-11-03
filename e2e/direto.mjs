@@ -1,0 +1,41 @@
+// Fluxo sem quiz: link do anúncio → página de vendas → checkout. Verifica UTMs, sessão, sck e eventos.
+// Uso: node e2e/direto.mjs <baseURL> <slug>
+import { createRequire } from "node:module";
+const { chromium, devices } = createRequire(import.meta.url)("playwright");
+const [base = "http://localhost:3100", slug = "fx-demo"] = process.argv.slice(2);
+const falhas = [];
+const ok = (c, m) => { if (!c) falhas.push(m); console.log(c ? "  ✓" : "  ✗", m); };
+const b = await chromium.launch();
+const ctx = await b.newContext({ ...devices["iPhone 13"] });
+await ctx.addInitScript(() => {
+  const log = JSON.parse(sessionStorage.getItem("__ev") || "[]");
+  setTimeout(() => { window.fbq = (...a) => { log.push(a.slice(0, 2).join(":")); sessionStorage.setItem("__ev", JSON.stringify(log)); }; }, 1200);
+});
+const p = await ctx.newPage();
+let checkoutUrl = null;
+await p.route("**/api/public/checkout**", async (r) => { checkoutUrl = r.request().url(); await r.fulfill({ status: 200, body: "ok" }); });
+await p.goto(`${base}/q/${slug}?utm_source=facebook&utm_medium=cpc&utm_campaign=vendas&utm_content=C03-prova`, { waitUntil: "load" });
+ok(/\/oferta\?utm_source=facebook/.test(p.url()), `link do anúncio abre a página de vendas com as UTMs (${p.url().replace(base, "")})`);
+ok(await p.getByText("Você quer ganhar dinheiro extra").count() === 0, "nenhuma tela de quiz");
+await p.waitForTimeout(1800);
+const sid = await p.evaluate(() => Object.entries(sessionStorage).find(([k]) => k.startsWith("fos_sid_direct_"))?.[1]);
+ok(/^[0-9a-f-]{36}$/.test(sid || ""), "visita registrada no FunnelOS (sessão criada)");
+const href = await p.locator("a[data-purchase]").first().getAttribute("href");
+ok(href?.startsWith(`/api/public/checkout?s=${sid}&b=`), "botão de compra passa pela rota de checkout com a sessão");
+await p.reload({ waitUntil: "load" }); await p.waitForTimeout(1500);
+const sid2 = await p.evaluate(() => Object.entries(sessionStorage).find(([k]) => k.startsWith("fos_sid_direct_"))?.[1]);
+ok(sid === sid2, "recarregar não cria outra visita");
+await p.locator("[data-offer]").scrollIntoViewIfNeeded(); await p.waitForTimeout(900);
+await p.locator("a[data-purchase]").first().click();
+await p.waitForTimeout(1200);
+ok(!!checkoutUrl, "clique leva ao checkout");
+const res = await fetch(new URL(href, base), { redirect: "manual" });
+const u = new URL(res.headers.get("location"));
+ok(u.host === "pay.kiwify.com.br" && u.searchParams.get("utm_content") === "C03-prova" && u.searchParams.get("sck") === sid, "Kiwify recebe UTMs e sck (venda atribuída ao anúncio)");
+const log = await p.evaluate(() => JSON.parse(sessionStorage.getItem("__ev") || "[]"));
+console.log("  eventos:", log.join(", "));
+const n = (e) => log.filter((x) => x === e).length;
+ok(n("track:ViewContent") === 1 && n("track:InitiateCheckout") === 1 && n("track:Purchase") === 0, "ViewContent e InitiateCheckout 1 vez cada; nenhum Purchase");
+await b.close();
+console.log(falhas.length ? `\n${falhas.length} FALHA(S)` : "\nTUDO OK");
+process.exit(falhas.length ? 1 : 0);

@@ -652,6 +652,7 @@ function rotaInvisivel(): CampaignConfig {
     theme: { ...dark },
     brand: { name: "Rota Invisível", tagline: "Guia prático de renda extra", logoUrl: "" },
     effects: true,
+    skipQuiz: true, // o link do anúncio abre direto a página de vendas
     blocks: [
       // 1 — Hero
       b("hero", {
@@ -731,6 +732,16 @@ function rotaInvisivel(): CampaignConfig {
         note: "Amostras parciais. O material completo é liberado após a confirmação do pagamento.",
       }),
 
+      // 5b — Entregáveis (o que chega e em que formato)
+      b("deliverables", {
+        tone: "surface",
+        eyebrow: "O que você recebe",
+        title: "Tudo o que chega para você por R$ 19,90",
+        subtitle: "Um guia principal e 4 bônus práticos, para ler no celular ou baixar em PDF.",
+        screenImageUrl: "/produto/previa/capitulo-1.jpg",
+        formats: ["Guia e bônus em PDF para baixar", "Acesso pela área de membros", "Leitura no celular ou no computador", "Liberado após a confirmação do pagamento"],
+      }),
+
       // 6 — O que você vai receber
       b("content", {
         numbered: true,
@@ -748,7 +759,7 @@ function rotaInvisivel(): CampaignConfig {
       }),
 
       // 7 — Bônus
-      b("bonuses", { tone: "surface", title: "E você ainda recebe 4 bônus" }),
+      b("bonuses", { title: "Os 4 bônus em detalhe" }),
 
       // 8 — Para quem é e para quem não é
       b("fit", {

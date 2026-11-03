@@ -54,8 +54,14 @@ export default async function OfferPage({ params, searchParams }: Props) {
   const usesReviews = campaign.config.salesPage.blocks.some((b) => b.type === "reviews");
   const [privacy, social] = await Promise.all([getSetting("privacy"), usesReviews ? socialProof(campaign.id) : Promise.resolve(undefined)]);
   const { offer, salesPage, tracking } = campaign.config;
+  // sem sessão (visita direta): o link já funciona sem JavaScript; o rastreador cria a visita e troca o
+  // link pela rota de checkout com sessão (UTMs + sck). O id do bloco vai no fragmento, ignorado pela Kiwify.
   const checkoutHref = (blockId: string) =>
-    sessionId ? `/api/public/checkout?s=${sessionId}&b=${encodeURIComponent(blockId)}` : offer.checkoutUrl || "#";
+    sessionId
+      ? `/api/public/checkout?s=${sessionId}&b=${encodeURIComponent(blockId)}`
+      : offer.checkoutUrl
+        ? `${offer.checkoutUrl}#fos_b=${encodeURIComponent(blockId)}`
+        : "#";
 
   return (
     <>
@@ -70,7 +76,7 @@ export default async function OfferPage({ params, searchParams }: Props) {
           social,
         }}
       />
-      <SalesTracker sessionId={sessionId} profile={profile?.name ?? null} value={offer.priceCents / 100} />
+      <SalesTracker sessionId={sessionId} campaignId={campaign.id} profile={profile?.name ?? null} value={offer.priceCents / 100} />
       <TrackingScripts tracking={tracking} />
     </>
   );

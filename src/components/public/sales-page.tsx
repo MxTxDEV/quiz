@@ -1,5 +1,5 @@
 import type React from "react";
-import { BadgeCheck, BookOpen, Briefcase, Check, ChevronDown, Gift, Laptop, Lock, ShieldCheck, Star, Store, TrendingUp, Users, Wallet, X } from "lucide-react";
+import { BadgeCheck, BookOpen, Briefcase, Check, ChevronDown, Download, Gift, Laptop, Lock, ShieldCheck, Smartphone, Star, Store, TrendingUp, Users, Wallet, X, Zap } from "lucide-react";
 import type { Block, Brand, Offer, Quiz, SalesPage } from "@/lib/domain/config";
 import type { Answers, Attributes } from "@/lib/engine/answers";
 import { evaluateGroup } from "@/lib/engine/rules";
@@ -566,6 +566,74 @@ function renderBlock(b: Block, env: Env): React.ReactNode {
             ))}
           </div>
           {b.note && <p className="mt-4 text-center text-[0.78em]" style={muted}>{b.note}</p>}
+        </Container>
+      );
+    }
+    case "deliverables": {
+      const main = offer.productName || page.brand.name || "Guia";
+      const screen = usableImageUrl(b.screenImageUrl);
+      const fmtIcons = [Download, Laptop, Smartphone, Zap];
+      return (
+        <Container>
+          <div className="text-center">
+            {b.eyebrow && <Eyebrow center>{b.eyebrow}</Eyebrow>}
+            <H2 center>{b.title}</H2>
+            {b.subtitle && <p className="mx-auto mt-3 max-w-2xl leading-relaxed" style={muted}>{b.subtitle}</p>}
+          </div>
+          <div className="mt-10 grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+            {/* composição: guia principal + bônus + tela do celular */}
+            <div className="relative mx-auto w-full max-w-[520px]">
+              <div className="flex items-end justify-center gap-2 sm:gap-4">
+                <div className="relative z-10 -mr-3 sm:-mr-2">
+                  <BookMockup title={main} label="Guia principal" imageUrl={offer.coverImageUrl} checkoutUrl={offer.checkoutUrl} />
+                </div>
+                {screen && (
+                  <div className="relative z-20 mb-[-6px] w-[118px] shrink-0 rotate-[6deg] overflow-hidden rounded-[22px] border-[5px] bg-white shadow-[0_30px_60px_-20px_rgba(0,0,0,.9)] sm:w-[150px]" style={{ borderColor: "#26262b", aspectRatio: "9 / 19" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={screen} alt="O material aberto no celular" loading="lazy" className="h-full w-full object-cover object-top" />
+                  </div>
+                )}
+              </div>
+              {offer.bonuses.length > 0 && (
+                <div className="mt-12 grid grid-cols-4 gap-2 sm:mt-8 sm:gap-3">
+                  {offer.bonuses.slice(0, 4).map((bonus, i) => (
+                    <div key={i} className="flex flex-col items-center gap-2 text-center">
+                      <div className="flex h-[96px] items-center sm:h-[130px]">
+                        <BookMockup size="md" title={bonus.title} label={`Bônus ${String(i + 1).padStart(2, "0")}`} imageUrl={bonus.imageUrl} checkoutUrl={offer.checkoutUrl} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* lista do que chega + formato de entrega */}
+            <div>
+              <ul className="space-y-2.5">
+                <li className="flex items-center gap-3 rounded-[var(--q-radius)] border px-4 py-3" style={{ borderColor: "color-mix(in srgb, var(--q-accent) 45%, transparent)", background: "color-mix(in srgb, var(--q-accent) 8%, var(--q-surface))" }}>
+                  <BookOpen className="size-5 shrink-0" style={accent} />
+                  <span className="flex-1"><b>{main}</b><span className="block text-[0.85em]" style={muted}>Guia principal{offer.benefits.length ? ` · ${offer.benefits.length} capítulos` : ""}</span></span>
+                </li>
+                {offer.bonuses.map((bonus, i) => (
+                  <li key={i} className="flex items-center gap-3 rounded-[var(--q-radius)] border px-4 py-3" style={{ borderColor: hairline, background: "var(--q-surface)" }}>
+                    <Gift className="size-5 shrink-0" style={accent} />
+                    <span className="flex-1"><b>{bonus.title}</b>{bonus.description && <span className="block text-[0.85em] leading-snug" style={muted}>{bonus.description}</span>}</span>
+                  </li>
+                ))}
+              </ul>
+              {b.formats.length > 0 && (
+                <div className="mt-5 grid grid-cols-2 gap-2.5">
+                  {b.formats.map((f, i) => {
+                    const Icon = fmtIcons[i % fmtIcons.length];
+                    return (
+                      <div key={i} className="flex items-center gap-2 rounded-[var(--q-radius)] px-3 py-2.5 text-[0.82em] font-semibold" style={{ background: "color-mix(in srgb, var(--q-text) 5%, transparent)" }}>
+                        <Icon className="size-4 shrink-0" style={accent} /> {f}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </Container>
       );
     }
