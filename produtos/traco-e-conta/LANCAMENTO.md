@@ -132,3 +132,18 @@ Envie os dois formatos no mesmo anúncio ("Personalizar posicionamentos"). **Lin
 | G · +5 bônus | Kit Completo | As 280 atividades e mais 5 apostilas bônus: inglês ilustrado, dinheirinho, horas, sondagem de escrita e material de parede. R$ 17,90. |
 
 Título sugerido para todos: **280 atividades para imprimir por R$ 10** (G: **280 atividades + 5 bônus por R$ 17,90**).
+
+## Criativos v5 (estilo infantil colorido) — `marketing/meta-ads/traco-e-conta/png-v5/`
+
+| Criativo | Título | Ângulo | Texto principal sugerido |
+|---|---|---|---|
+| V1 | 280 ATIVIDADES | Volume | 280 atividades de alfabetização e matemática em PDF, prontas para imprimir. Para crianças de 4 a 8 anos, com gabarito. R$ 10. |
+| V2 | 280 ATIVIDADES | Alfabetização | Letras, sílabas e leitura, e também matemática. Atividades curtas e coloridas para fazer em casa. R$ 10. |
+| V3 | 280 KIT COMPLETO | Kit Completo | As 280 atividades e mais 5 apostilas bônus: inglês, dinheirinho, horas e material de parede. R$ 17,90. |
+| V4 | MENOS TELA | Tempo juntos | Mais lápis, mais tempo juntos. 280 atividades para fazer em casa, do traçado às continhas. R$ 10. |
+| V5 | REFORÇO ESCOLAR | Reforço | O que a escola ensina, praticado em casa no ritmo da criança. 280 atividades organizadas por tema. |
+| V6 | IMPRIMA HOJE MESMO | Conveniência | O acesso chega no seu e-mail logo após o pagamento: é só baixar, imprimir e usar. R$ 10. |
+| V7 | R$ 10 · 280 ATIVIDADES | Preço | 280 atividades por R$ 10, menos de 4 centavos por atividade. Pagamento único, sem mensalidade. |
+| V8 | 1, 2, 3 · VAMOS CONTAR | Matemática | Números, continhas e sequências com figuras e cores, com gabarito para corrigir rápido. R$ 10. |
+| V9 | A B C · DO A AO Z | Alfabeto | Do traçado das letras às primeiras leituras: alfabeto, sílabas, ortografia e textos curtos. R$ 10. |
+| V10 | +5 BÔNUS · PARA O ANO TODO | Kit Completo | 280 atividades + 5 apostilas bônus para aprender o ano todo. R$ 17,90. |
