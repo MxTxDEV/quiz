@@ -118,3 +118,17 @@ Envie os dois formatos no mesmo anúncio ("Personalizar posicionamentos"). **Lin
 - depois, desligar os anúncios com CTR baixo e duplicar os 2 ou 3 melhores.
 
 **Meta de viabilidade:** o ticket médio fica entre R$ 10 e R$ 17,90. Para lucrar, o custo por compra precisa ficar abaixo do ticket médio. Acompanhe pelo gerenciador e pela Kiwify.
+
+## Criativos v4 (foto em destaque, outros ângulos) — `marketing/meta-ads/traco-e-conta/png-v4/`
+
+| Criativo | Ângulo | Texto principal sugerido |
+|---|---|---|
+| A · Menos tela | Tempo juntos | Que tal trocar um pouco de tela por lápis e papel? São 280 atividades para fazer junto com seu filho: letras, sílabas, números, labirintos e muito mais. PDF para imprimir, por R$ 10. |
+| B · Ler e escrever | Alfabetização | Do traçado das letras às primeiras leituras: alfabeto, famílias silábicas, ortografia e 20 textos curtos com perguntas. Atividades para fazer em casa, com gabarito. R$ 10. |
+| C · Reforço | Reforço escolar | O que a escola ensina, praticado em casa no ritmo da criança. 280 atividades de alfabetização e matemática, organizadas por tema, prontas para imprimir. |
+| D · Imprima hoje | Conveniência | O acesso chega no seu e-mail logo após o pagamento. É só baixar o PDF, imprimir e usar ainda hoje. 280 atividades por R$ 10. |
+| E · 280 por R$ 10 | Preço | São 280 atividades por R$ 10: menos de 4 centavos por folha. Alfabetização e matemática para crianças de 4 a 8 anos, com gabarito. |
+| F · 1, 2, 3... | Matemática | Contar, juntar, tirar e completar sequências com figuras e cores. Matemática que parece brincadeira, para fazer junto. 280 atividades por R$ 10. |
+| G · +5 bônus | Kit Completo | As 280 atividades e mais 5 apostilas bônus: inglês ilustrado, dinheirinho, horas, sondagem de escrita e material de parede. R$ 17,90. |
+
+Título sugerido para todos: **280 atividades para imprimir por R$ 10** (G: **280 atividades + 5 bônus por R$ 17,90**).
