@@ -1,0 +1,10 @@
+// Configuração da página de vendas Traço & Conta. Edite só este arquivo.
+window.TC_CONFIG = {
+  // ID do Pixel da Meta deste produto (recomendado: um pixel/conjunto de dados só para esta marca). Vazio = sem pixel.
+  pixel: "",
+  // Links de checkout da Kiwify (cole aqui depois de criar os produtos)
+  checkoutBasico: "",
+  checkoutCompleto: "",
+  precoBasico: 10.0,
+  precoCompleto: 17.9,
+};

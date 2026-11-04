@@ -11,7 +11,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // área do aluno estática (public/acesso/<pasta>/index.html) acessível pela URL da pasta
   async rewrites() {
-    return [{ source: "/acesso/:dir", destination: "/acesso/:dir/index.html" }];
+    return [
+      { source: "/acesso/:dir", destination: "/acesso/:dir/index.html" },
+      // página de vendas estática do kit Traço & Conta (public/traco-e-conta/index.html)
+      { source: "/traco-e-conta", destination: "/traco-e-conta/index.html" },
+    ];
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

@@ -1,0 +1,92 @@
+{
+  "atividades": 280,
+  "modulos": [
+    [
+      "Coordenação motora",
+      24
+    ],
+    [
+      "Alfabeto",
+      28
+    ],
+    [
+      "Famílias silábicas",
+      32
+    ],
+    [
+      "Separação silábica",
+      10
+    ],
+    [
+      "Sílabas complexas",
+      12
+    ],
+    [
+      "Ortografia",
+      14
+    ],
+    [
+      "Leitura e interpretação",
+      20
+    ],
+    [
+      "Escrita: nome da figura e ligue",
+      16
+    ],
+    [
+      "Números de 0 a 20",
+      21
+    ],
+    [
+      "Quantidades e comparação",
+      12
+    ],
+    [
+      "Adição e subtração",
+      23
+    ],
+    [
+      "Lógica: sequências, antes e depois",
+      12
+    ],
+    [
+      "Formas geométricas",
+      8
+    ],
+    [
+      "Labirintos",
+      20
+    ],
+    [
+      "Caça-palavras",
+      16
+    ],
+    [
+      "Desenho no quadriculado",
+      12
+    ]
+  ],
+  "bonusPaginas": 50,
+  "bonus": [
+    [
+      "Inglês ilustrado",
+      12
+    ],
+    [
+      "Dinheirinho: sistema monetário",
+      10
+    ],
+    [
+      "Horas e calendário",
+      8
+    ],
+    [
+      "Sondagem de escrita",
+      6
+    ],
+    [
+      "Parede da sala e certificados",
+      14
+    ]
+  ]
+}
