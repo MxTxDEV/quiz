@@ -8,7 +8,7 @@ const { chromium } = createRequire(import.meta.url)("playwright");
 const here = path.dirname(new URL(import.meta.url).pathname);
 const root = path.resolve(here, "../../..");
 const img = path.join(root, "public/traco-e-conta/img");
-const out = path.join(here, "png-v2");
+const out = process.env.OUT || path.join(here, "png-v2");
 mkdirSync(out, { recursive: true });
 const b64 = (f) => `data:image/jpeg;base64,${readFileSync(path.join(img, `folha-${f}.jpg`)).toString("base64")}`;
 const font = (f) => `data:font/woff2;base64,${readFileSync(path.join(root, "produtos/traco-e-conta/fontes", f)).toString("base64")}`;
@@ -25,7 +25,7 @@ const css = `@font-face{font-family:Fredoka;font-weight:700;src:url(${font("fred
 .word{font-family:Fredoka;font-weight:700;line-height:.9;color:#f97316;text-shadow:0 6px 0 #c2410c;-webkit-text-stroke:3px #fff;paint-order:stroke fill;letter-spacing:.04em;font-kerning:none;font-feature-settings:"kern" 0,"liga" 0}
 .stage{position:relative;flex:1;width:100%;min-height:0}
 .sheet{position:absolute;border-radius:12px;border:3px solid #fff;box-shadow:0 26px 46px -16px rgba(30,41,59,.55);background:#fff}
-.foto{position:absolute;left:50%;transform:translateX(-50%);border-radius:36px;object-fit:cover;box-shadow:0 30px 60px -24px rgba(30,41,59,.6);border:8px solid #fff}
+.foto{position:absolute;left:50%;transform:translateX(-50%);border-radius:36px;object-fit:cover;object-position:50% 72%;box-shadow:0 30px 60px -24px rgba(30,41,59,.6);border:8px solid #fff}
 .band{background:#2563eb;color:#fff;font-family:Fredoka;font-weight:700;border-radius:999px;padding:14px 40px;text-align:center;box-shadow:0 8px 0 #1d4ed8}
 .band small{display:block;font-family:Nunito;font-weight:900;font-size:.55em;color:#fde047;letter-spacing:.02em}
 .price{background:#fde047;color:#1e293b;font-family:Fredoka;font-weight:700;border-radius:28px;padding:6px 46px;margin-top:18px;box-shadow:0 8px 0 #ca8a04}
