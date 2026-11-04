@@ -21,7 +21,7 @@ const css = `@font-face{font-family:Fredoka;font-weight:700;src:url(${font("fred
 .torn{position:absolute;z-index:1;filter:drop-shadow(0 6px 8px rgba(0,0,0,.18))}
 .e{position:absolute;font-family:"Noto Color Emoji";line-height:1;filter:drop-shadow(0 8px 10px rgba(0,0,0,.25));z-index:2}
 .doodle{position:absolute;z-index:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.photo{position:absolute;object-fit:cover;object-position:50% 78%;z-index:3;-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 52%,#000 62%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 52%,#000 62%,transparent 100%)}
+.photo{position:absolute;object-fit:cover;object-position:50% 62%;z-index:3;border-radius:40px;-webkit-mask-image:radial-gradient(ellipse 58% 60% at 50% 48%,#000 78%,transparent 100%);mask-image:radial-gradient(ellipse 58% 60% at 50% 48%,#000 78%,transparent 100%)}
 .logo{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;font-family:Fredoka;font-weight:700;background:#fff;border-radius:999px;padding:8px 24px 8px 12px;box-shadow:0 8px 22px -8px rgba(0,0,0,.3);z-index:9;white-space:nowrap;border:4px solid #fde047}
 .logo .ic svg{width:100%;height:100%;display:block}.a{color:#2563eb}.b{color:#f97316}.c{color:#16a34a}
 .t{position:absolute;left:50%;transform:translateX(-50%);width:max-content;text-align:center;z-index:6;font-family:Fredoka;font-weight:700;color:#e11d48;line-height:.84;-webkit-text-stroke:var(--sw) #fff;paint-order:stroke fill;text-shadow:0 var(--sh) 0 #9f1239,0 calc(var(--sh) * 2) 26px rgba(120,20,40,.35);font-kerning:none;font-feature-settings:"kern" 0;white-space:nowrap}
@@ -67,17 +67,17 @@ const ITENS = ["Alfabeto", "Sílabas", "Leitura", "Números", "Continhas", "Labi
 const V = [
   { id: "V1-basico", num: "280", word: "ATIVIDADES", cover: "KIT DE 280<br>ATIVIDADES", s: ["alfabeto", "contas"], ribbon: "<b>280</b> atividades em PDF", sub: "Prontas para imprimir", price: "R$ 10,00", cta: "QUERO MEU KIT" },
   { id: "V2-alfabetizacao", num: "280", word: "ATIVIDADES", cover: "KIT DE 280<br>ATIVIDADES", s: ["silabas", "leitura"], ribbon: "Letras, sílabas e <b>leitura</b>", sub: "E também matemática · 4 a 8 anos", price: "R$ 10,00", cta: "QUERO MEU KIT" },
-  { id: "V3-completo", num: "280", word: "+ 5 BÔNUS", cover: "KIT COMPLETO<br>+ 5 BÔNUS", s: ["b-ingles", "b-horas"], ribbon: "<b>280</b> atividades + 5 apostilas", sub: "Inglês · dinheirinho · horas · parede", price: "R$ 17,90", cta: "QUERO O COMPLETO" },
+  { id: "V3-completo", num: "280", word: "KIT COMPLETO", cover: "KIT COMPLETO<br>+ 5 BÔNUS", s: ["b-ingles", "b-horas"], ribbon: "<b>280</b> atividades <b>+ 5 bônus</b>", sub: "Inglês · dinheirinho · horas · parede", price: "R$ 17,90", cta: "QUERO O COMPLETO" },
 ];
 
 const L = {
-  feed: { w: 1080, h: 1350, logo: [22, 32], num: [70, 250], word: [292, 132], photo: [90, 360, 900, 600], cover: [40, 715, 300, -5], s1: [370, 760, 300, 2], s2: [690, 750, 300, 6],
+  feed: { w: 1080, h: 1350, logo: [22, 32], num: [70, 250], word: [292, 132], photo: [40, 400, 1000, 640], cover: [26, 820, 245, -6], s1: [806, 830, 230, 7], s2: [-999, 0, 10, 0],
     ribbon: [1022, 54, "14px 48px"], sub: [1104, 36, "6px 34px"], price: [1150, 74, "0 62px"], cta: [1262, 72, 48],
     torn: [[-40, -20, 240, 120, -16, "#ef4444"], [880, -30, 260, 130, 14, "#3b82f6"], [-60, 600, 200, 110, 70, "#fde047"], [960, 560, 200, 110, -68, "#2dd4bf"], [-50, 1180, 220, 120, 20, "#f97316"], [920, 1200, 240, 120, -18, "#a855f7"]],
     emo: [["🖍️", 40, 150, 80, -30], ["✏️", 940, 150, 80, 30], ["🖍️", 10, 470, 70, 60], ["✂️", 990, 450, 66, 20], ["📏", 20, 980, 70, -40], ["🖍️", 990, 1000, 72, -60]],
     doo: () => star(190, 120, 60, "#f97316", -12) + heart(840, 120, 58, "#e11d48", 10) + spiral(70, 330, 70, "#2563eb") + zig(930, 330, 110, "#22c55e", -10) + star(960, 680, 50, "#eab308", 15) + heart(30, 690, 50, "#ec4899", -15),
     rays: [[200, 1150], [810, 1150]] },
-  stories: { w: 1080, h: 1920, logo: [200, 34], num: [270, 280], word: [520, 146], photo: [70, 600, 940, 680], cover: [40, 1060, 320, -5], s1: [370, 1120, 310, 2], s2: [695, 1110, 310, 6],
+  stories: { w: 1080, h: 1920, logo: [200, 34], num: [270, 280], word: [520, 146], photo: [20, 640, 1040, 720], cover: [30, 1160, 265, -6], s1: [790, 1170, 250, 7], s2: [-999, 0, 10, 0],
     ribbon: [1340, 58, "14px 50px"], sub: [1428, 38, "6px 36px"], price: [1480, 84, "0 66px"], cta: [1588, 82, 54],
     torn: [[-40, 110, 240, 120, -16, "#ef4444"], [880, 100, 260, 130, 14, "#3b82f6"], [-60, 850, 200, 110, 70, "#fde047"], [960, 820, 200, 110, -68, "#2dd4bf"], [-50, 1700, 220, 120, 20, "#f97316"], [920, 1720, 240, 120, -18, "#a855f7"], [380, 1760, 300, 110, 4, "#fde047"]],
     emo: [["🖍️", 40, 330, 86, -30], ["✏️", 940, 330, 86, 30], ["🖍️", 10, 720, 76, 60], ["✂️", 990, 700, 70, 20], ["📏", 20, 1300, 74, -40], ["🖍️", 990, 1300, 76, -60], ["🍎", 110, 1730, 80, -10], ["📚", 860, 1720, 86, 0]],
@@ -96,7 +96,7 @@ for (const [tag, k] of Object.entries(L)) {
       <img class="photo" src="${FOTO}" style="left:${k.photo[0]}px;top:${k.photo[1]}px;width:${k.photo[2]}px;height:${k.photo[3]}px">
       <div class="logo" style="top:${k.logo[0]}px;font-size:${k.logo[1]}px"><span class="ic" style="width:${k.logo[1] * 1.4}px;height:${k.logo[1] * 1.4}px">${ICONE}</span><span><span class="a">Traço</span> <span class="b">&amp;</span> <span class="c">Conta</span></span></div>
       <div class="t" style="top:${k.num[0]}px;font-size:${k.num[1]}px;--sw:12px;--sh:12px">${v.num}</div>
-      <div class="t word" style="top:${k.word[0] + (v.id.includes("completo") ? 26 : 0)}px;font-size:${k.word[1]}px;--sw:${v.id.includes("completo") ? 4 : 9}px;--sh:9px;letter-spacing:${v.id.includes("completo") ? ".06em" : ".02em"}">${v.word}</div>
+      <div class="t word" style="top:${k.word[0]}px;font-size:${k.word[1]}px;--sw:9px;--sh:9px;letter-spacing:.02em">${v.word}</div>
       ${cover(k.cover[0], k.cover[1], k.cover[2], k.cover[3], v.cover, ITENS)}
       ${sheet(v.s[0], k.s1[2], k.s1[0], k.s1[1], k.s1[3])}${sheet(v.s[1], k.s2[2], k.s2[0], k.s2[1], k.s2[3])}
       <div class="ribbon" style="top:${k.ribbon[0]}px;font-size:${k.ribbon[1]}px;padding:${k.ribbon[2]}">${v.ribbon}</div>
